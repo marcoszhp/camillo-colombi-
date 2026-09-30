@@ -1,0 +1,1 @@
+const r=require('express').Router();const c=require('../controllers/catalogController');r.get('/products',c.list);r.get('/products/:id',c.get);r.get('/catalog-meta',c.meta);r.post('/products/:id/notify',c.notify);module.exports=r;

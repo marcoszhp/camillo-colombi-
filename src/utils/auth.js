@@ -1,0 +1,1 @@
+const jwt=require('jsonwebtoken');exports.sign=u=>jwt.sign({sub:u.id,role:u.role,name:u.name,email:u.email},process.env.JWT_SECRET||'dev-secret',{expiresIn:'8h'});exports.verify=t=>jwt.verify(t,process.env.JWT_SECRET||'dev-secret');

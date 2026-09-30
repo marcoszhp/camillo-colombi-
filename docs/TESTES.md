@@ -1,0 +1,21 @@
+# Checklist de testes
+
+- [ ] `npm install`
+- [ ] `npm run db:init`
+- [ ] login admin
+- [ ] login cliente
+- [ ] catálogo sem filtros
+- [ ] filtro por torra
+- [ ] filtro por essência
+- [ ] página de produto
+- [ ] seleção de 250/500g
+- [ ] seleção de moagem
+- [ ] produto esgotado
+- [ ] botão Me avise
+- [ ] carrinho
+- [ ] checkout
+- [ ] pedido criado sem baixa de estoque
+- [ ] confirmação de pagamento baixa estoque
+- [ ] pedido no histórico
+- [ ] mudança de status no admin
+- [ ] bloqueio de rota admin para cliente
