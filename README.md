@@ -1,45 +1,23 @@
-# Caffè Camillo Colombi — V2
+# Caffè Camillo Colombi — aplicação online
 
-E-commerce de café artesanal remodelado a partir do novo levantamento de requisitos.
+A aplicação atual usa **Cloudflare Workers + D1 + Static Assets** e fica em [`cloudflare/`](cloudflare/README.md). O código Node/MySQL na raiz foi preservado como versão acadêmica anterior; ele não deve ser usado no build da aplicação online.
 
-## O que mudou
-- O MVP agora é centrado em café em pacote.
-- Organização principal por torra.
-- Variações por tipo, moagem e peso.
-- Origem e história em cada produto.
-- Essências: tradicional, cacau, chocolate e laranja.
-- Produto esgotado continua visível com "Me avise".
-- Estoque só é baixado após confirmação de pagamento.
-- Checkout com Pix/cartão demo.
-- Timeline de pedido.
-- Camillo Club.
-- Perfis admin/operator.
-- Identidade amarelo + vermelho + pedra azul.
-- Arial Bold, sem Helvetica.
-- Imagens online da Wikimedia com fallback local e artes SVG originais para funcionamento offline.
+## Desenvolvimento
 
-## Tecnologias
-Node.js, Express, MySQL, mysql2, bcryptjs, JWT, Helmet, CORS, rate limit, HTML, CSS e JavaScript vanilla.
+```powershell
+cd cloudflare
+npm ci
+npm run db:init:local
+npm run dev
+```
 
-## Rodar
-1. `npm install`
-2. copie `.env.example` para `.env`
-3. configure MySQL
-4. `npm run db:init`
-5. `node src/server.js`
-6. abra `http://localhost:3000`
+Use Node 24 (mínimo 22.13). A inicialização cria dados demonstrativos somente em um banco local vazio; em execuções posteriores aplica apenas migrations. A configuração privada local é gerada se ausente e ignorada pelo Git.
 
-## Logins demo
+## Verificação e publicação
 
-O checkout exige login para que o pedido possa ser associado à conta e confirmado com segurança.
-Admin: `admin@caffecamillo.local` / `Admin@123`
-Operador: `operador@caffecamillo.local` / `Admin@123`
-Cliente: `cliente@caffecamillo.local` / `Admin@123`
+Dentro de `cloudflare/`, execute `npm test`, `npm run check` e `npm run deploy:dry`. O diretório raiz do Workers Builds deve ser **cloudflare**, com branch de produção **main** e comando de deploy **npm run deploy**. Leia [o guia de publicação](cloudflare/docs/CLOUDFLARE.md) antes de conectar ou atualizar a instalação existente.
 
-> As senhas acima são apenas para o ambiente demonstrativo. Troque-as antes de qualquer uso real.
+Alterações estruturais entram por pull request. A publicação aplica migrations pendentes antes do Worker e preserva o segredo de autenticação. Não existe reset automático de produção.
 
-## Observação de conteúdo
-As respostas fornecidas não trazem a história factual específica das fazendas, produtores e lotes. Por isso, os textos de origem no seed são explicitamente demonstrativos. Antes de uma publicação real, substitua-os pelos conteúdos aprovados pela marca.
+[Memória do projeto](PROJECT_CACHE.md) · [API](cloudflare/docs/API.md) · [Fontes editoriais](cloudflare/docs/CULTURA-DO-CAFE.md)
 
-## Documentação
-Veja `docs/TUTORIAL_SENAC.md`, `docs/API.md`, `docs/BANCO_DE_DADOS.md`, `docs/DESIGN_SYSTEM.md`, `docs/SEGURANCA.md`, `docs/REQUISITOS.md` e `docs/GUIA_DE_IMAGENS.md`.

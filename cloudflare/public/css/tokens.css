@@ -1,0 +1,7 @@
+:root{
+ --yellow:#F3C84B;--yellow-soft:#FFF4C7;--red:#B52A2D;--red-dark:#871D20;--stone-blue:#5B7382;--stone-blue-soft:#E8EEF1;
+ --bg:#FAF7F0;--surface:#FFFFFF;--surface-2:#F3EEE5;--text:#26231F;--muted:#6F6A62;--border:#DED7CC;--success:#2F6E51;--warning:#8B5E14;--danger:#A32228;
+ --font:Arial,"Segoe UI",sans-serif;--max:1180px;--r-sm:8px;--r-md:16px;--r-lg:26px;--shadow:0 18px 50px rgba(57,42,29,.10);--shadow-sm:0 8px 24px rgba(57,42,29,.08);
+ --s1:.25rem;--s2:.5rem;--s3:.75rem;--s4:1rem;--s5:1.5rem;--s6:2rem;--s7:3rem;--s8:4.5rem;--fast:160ms ease;--nav-h:72px;
+}
+[data-theme="dark"]{--bg:#181715;--surface:#24211E;--surface-2:#2E2A25;--text:#F7F1E7;--muted:#C1B8AA;--border:#484038;--yellow-soft:#473C1E;--stone-blue-soft:#26363F;--shadow:0 18px 50px rgba(0,0,0,.25);}

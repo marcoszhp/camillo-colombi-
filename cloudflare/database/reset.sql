@@ -1,0 +1,26 @@
+-- LOCAL DEVELOPMENT ONLY: never run this destructive fixture reset remotely.
+PRAGMA foreign_keys = ON;
+DROP TABLE IF EXISTS d1_migrations;
+DROP TABLE IF EXISTS login_attempts;
+DROP TABLE IF EXISTS favorites;
+DROP TABLE IF EXISTS stock_notifications;
+DROP TABLE IF EXISTS customer_rewards;
+DROP TABLE IF EXISTS rewards;
+DROP TABLE IF EXISTS loyalty_transactions;
+DROP TABLE IF EXISTS loyalty_levels;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS order_status_history;
+DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS order_mutation_guards;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS product_variants;
+DROP TABLE IF EXISTS product_aromas;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS aromas;
+DROP TABLE IF EXISTS grind_types;
+DROP TABLE IF EXISTS roast_levels;
+DROP TABLE IF EXISTS origins;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS addresses;
+DROP TABLE IF EXISTS users;
+PRAGMA foreign_keys = ON;

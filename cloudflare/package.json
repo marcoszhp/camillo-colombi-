@@ -1,0 +1,32 @@
+{
+  "name": "caffe-camillo-colombi-cloudflare",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Versão Cloudflare do e-commerce Caffè Camillo Colombi: Workers Static Assets + Worker API + D1.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "node scripts/deploy-cloudflare.mjs",
+    "cf:login": "wrangler login",
+    "cf:whoami": "wrangler whoami",
+    "db:init:local": "node scripts/init-local.mjs",
+    "db:init:remote": "wrangler d1 migrations apply DB --remote",
+    "db:reset:local": "wrangler d1 execute DB --local --file=database/reset.sql --yes && npm run db:init:local",
+    "cloudflare:setup": "node scripts/deploy-cloudflare.mjs",
+    "check": "node scripts/check-project.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "deploy:dry": "wrangler deploy --dry-run"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "devDependencies": {
+    "wrangler": "^4.45.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "workerd@1.20260926.1": true
+  }
+}
