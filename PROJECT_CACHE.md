@@ -2,9 +2,9 @@
 
 ## Estado em 05/10/2026
 
-Trabalho em andamento na branch `codex/camillo-experiencia-cloudflare`, baseada no commit `da543a3` de `marcoszhp/camillo-colombi-`. O código Node/MySQL da raiz é a base histórica e permanece preservado. A aplicação Cloudflare fica em `cloudflare/` e foi copiada do checkout existente em Downloads; sem dados privados, `node_modules` ou estado D1. O diretório raiz de build/deploy Cloudflare é `cloudflare/`.
+Versão publicada em main no GitHub, commit de implementação `ae999fe`; desenvolvida na branch `codex/camillo-experiencia-cloudflare` a partir de `da543a3`. O código Node/MySQL da raiz é a base histórica e permanece preservado. A aplicação Cloudflare fica em `cloudflare/` e foi copiada do checkout existente em Downloads; sem dados privados, `node_modules` ou estado D1. O diretório raiz de build/deploy Cloudflare é `cloudflare/`.
 
-O Worker público conhecido é `https://caffe-camillo-colombi.marcos-hpg114.workers.dev`. A autenticação Cloudflare foi confirmada. Uma leitura da API remota confirmou 9 produtos legados; não houve alteração remota. Ainda não há commit, push ou PR. Não presumir que o vínculo GitHub → Cloudflare esteja configurado.
+Worker publicado e conferido em https://caffe-camillo-colombi.marcos-hpg114.workers.dev em 05/10/2026. Versão Cloudflare: 0a4c01cf-b659-43a3-a529-fa4505bed93f. GitHub Actions aprovado (run 37338874741). A integração recusou criação de PR com HTTP 403; publicação autorizada pelo usuário concluída por fast-forward de main via Git autenticado. Deploy manual concluído; vínculo automático GitHub Builds não confirmado.
 
 ## Índice
 
@@ -28,6 +28,7 @@ Migrations versionadas: `0001_baseline`, `0002_flexible_variants` e `0003_offici
 
 23/23 testes, npm run check e deploy --dry-run finais aprovados em 05/10. Fixture local refeita com todas as migrations; integridade SQLite ok e nenhuma violação de chave estrangeira. Links locais corrigidos. Interface conferida em 360, 768 e 1280 px sem overflow; 1600 px não comprovado por limitação da ferramenta. Checkout mock local concluído com Espresso 60 ml; administração e variantes conferidas.
 
-Usuário autorizou publicar GitHub/Cloudflare e enviar o link por e-mail após confirmação. Backup privado pré-publicação salvo em cloudflare/reports (ignorado pelo Git). Base remota anterior: 9 produtos, 2 pedidos, 3 usuários, estoque legado 2530 e pontos 343. Próximo passo: commit, push, PR, merge, migrations/deploy e conferência dos dados preservados. Não presumir conexão automática GitHub Builds configurada.
+Usuário autorizou publicar GitHub/Cloudflare e enviar o link por e-mail após confirmação. Backup privado pré-publicação salvo em cloudflare/reports (ignorado pelo Git). Base remota anterior: 9 produtos, 2 pedidos, 3 usuários, estoque legado 2530 e pontos 343. Migrations e deploy concluídos. Conferência remota: 19 produtos ativos, 2 pedidos, 3 usuários, estoque legado 2530 e pontos 343 preservados; foreign_key_check vazio. Health e catálogo HTTP 200. Site conferido no navegador; captura em reports/site-online.jpg. E-mail com link enviado ao destinatário solicitado (Gmail confirmou SENT). Sem pendências de publicação; pagamentos permanecem mock.
 
 Preservar margem preventiva de uso de 5%; consultar antes de etapas grandes. Nunca resetar produção nem incluir backup, segredos ou estado local no Git.
+

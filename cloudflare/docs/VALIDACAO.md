@@ -8,4 +8,5 @@
 - Checkout mock local concluído com Espresso 60 ml; variantes e formulário administrativo conferidos. Pagamentos permanecem demonstrativos.
 - Backup privado da produção exportado antes da publicação. Referência para preservação: 2 pedidos, 3 usuários, 2530 unidades de estoque legado, 343 pontos.
 
-Publicação e conferência remota ainda pendentes no momento desta revisão. Nenhum teste físico realizado.
+Publicação concluída em 05/10/2026: versão Cloudflare 0a4c01cf-b659-43a3-a529-fa4505bed93f; implementação ae999fe em main. GitHub Actions run 37338874741 aprovado. API health e catálogo HTTP 200; 19 produtos ativos. Conferência remota preservou 2 pedidos, 3 usuários, estoque legado 2530 e 343 pontos; foreign_key_check sem violações. Página publicada conferida no navegador. Nenhum teste físico realizado.
+
