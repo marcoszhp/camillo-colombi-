@@ -38,5 +38,5 @@ Cinco fotos realistas geradas com a ferramenta integrada foram salvas em `cloudf
 
 Preservar margem preventiva de uso de 5%; consultar antes de etapas grandes. Nunca resetar produção nem incluir backup, segredos ou estado local no Git.
 
-Em 05/10/2026, os cartões de produto da interface editorial receberam fundo branco, `padding: 20px` e cantos de 15px, conforme referência enviada. `npm run check` e 28/28 testes aprovados. Publicação direta no Cloudflare foi recusada com código 7403 por sessão local sem autorização; envio ao GitHub solicitado para acionar a integração disponível.
+Em 05/10/2026, os cartões de produto da interface editorial receberam fundo branco, `padding: 20px` e cantos de 15px, conforme referência enviada. No modo escuro, o fundo do cartão passa a ser `#2a2621`. `npm run check` e 28/28 testes aprovados. PR #1 integrado à `main` no commit `c967c3d`; GitHub Actions run `37382491789` aprovado. O fluxo completo com migrations encontrou erro 7403 no D1, mas a publicação segura de Worker/assets, sem tocar no banco, foi concluída na versão Cloudflare `ca780028-aab7-4f21-a642-953c3779b98b`; CSS público conferido.
 
