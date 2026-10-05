@@ -10,3 +10,6 @@ reports/
 .dev.vars.*
 !.dev.vars.example
 
+
+!worker/lib/
+!worker/lib/**
