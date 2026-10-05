@@ -32,15 +32,22 @@ export async function signToken(user, secret, ttlSeconds = 8 * 60 * 60) {
 }
 
 export async function verifyToken(token, secret) {
-  if (!secret || !token) throw new AppError('Autenticação necessária.', 401, 'AUTH_REQUIRED');
-  const parts = token.split('.');
-  if (parts.length !== 3) throw new AppError('Token inválido.', 401, 'INVALID_TOKEN');
-  let payload;
-  try { payload = JSON.parse(b64urlToString(parts[1])); }
-  catch { throw new AppError('Token inválido.', 401, 'INVALID_TOKEN'); }
+  if (!secret) throw new AppError('JWT_SECRET não configurado no Worker.', 500, 'SERVER_CONFIG_ERROR');
+  if (!token) throw new AppError('Autenticação necessária.', 401, 'AUTH_REQUIRED');
+  const parts = String(token).split('.');
+  if (parts.length !== 3 || parts.some((part) => !/^[A-Za-z0-9_-]+$/.test(part))) throw new AppError('Token inválido.', 401, 'INVALID_TOKEN');
+  let header, payload, signature;
+  try {
+    header = JSON.parse(b64urlToString(parts[0]));
+    payload = JSON.parse(b64urlToString(parts[1]));
+    signature = b64urlToBytes(parts[2]);
+  } catch { throw new AppError('Token inválido.', 401, 'INVALID_TOKEN'); }
+  if (header?.alg !== 'HS256' || !payload || !/^\d+$/.test(String(payload.sub || '')) || Number(payload.sub) <= 0 || !Number.isInteger(payload.exp) || signature.length !== 32) {
+    throw new AppError('Token inválido.', 401, 'INVALID_TOKEN');
+  }
   const key = await hmacKey(secret);
-  const valid = await crypto.subtle.verify('HMAC', key, b64urlToBytes(parts[2]), encoder.encode(`${parts[0]}.${parts[1]}`));
-  if (!valid || !payload.exp || payload.exp <= Math.floor(Date.now() / 1000)) throw new AppError('Token inválido ou expirado.', 401, 'INVALID_TOKEN');
+  const valid = await crypto.subtle.verify('HMAC', key, signature, encoder.encode(`${parts[0]}.${parts[1]}`));
+  if (!valid || payload.exp <= Math.floor(Date.now() / 1000)) throw new AppError('Token inválido ou expirado.', 401, 'INVALID_TOKEN');
   return payload;
 }
 

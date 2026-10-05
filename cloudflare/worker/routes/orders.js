@@ -56,19 +56,17 @@ async function createOrder(request, env) {
   const brand = String(input.cardBrand || '').toLowerCase();
   if (input.paymentMethod === 'card' && !validBrands.has(brand)) throw new AppError('Bandeira de cartão não aceita. American Express não é aceito na V1.', 400, 'CARD_BRAND_NOT_ACCEPTED');
   const address = validateShippingAddress(input.shippingAddress);
+  const shipping = calculateShipping({ state: address.state });
   const cart = normalizeCart(input.items);
   const loaded = await loadCartVariants(env, cart);
   let subtotal = 0;
-  let totalWeightG = 0;
   for (const item of loaded) {
     const v = item.variant;
     if (!v || !Number(v.active) || !Number(v.product_active)) throw new AppError('Uma variante do carrinho não está disponível.', 409, 'VARIANT_UNAVAILABLE');
     if (Number(v.stock) < item.quantity) throw new AppError(`Estoque insuficiente para ${v.product_name}.`, 409, 'INSUFFICIENT_STOCK');
     subtotal += Number(v.price) * item.quantity;
-    totalWeightG += Number(v.weight_g || v.volume_ml || 0) * item.quantity;
   }
   subtotal = Number(subtotal.toFixed(2));
-  const shipping = calculateShipping({ state: address.state, subtotal, totalWeightG });
   const total = Number((subtotal + shipping.price).toFixed(2));
   const payment = mockPayment({ method: input.paymentMethod, brand: input.paymentMethod === 'card' ? brand : null, scenario });
   const orderId = crypto.randomUUID();

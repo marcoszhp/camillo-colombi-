@@ -2,16 +2,25 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { calculateShipping, mockPayment, orderNumber } from '../worker/lib/services.js';
 
-test('Sudeste tem frete grátis', () => {
+test('Minas Gerais tem frete grátis', () => {
   assert.equal(calculateShipping({ state: 'MG', subtotal: 80, totalWeightG: 500 }).price, 0);
+  assert.equal(calculateShipping({ state: ' mg ' }).free, true);
 });
 
-test('compras de R$ 300 têm frete grátis em qualquer estado', () => {
-  assert.equal(calculateShipping({ state: 'BA', subtotal: 300, totalWeightG: 500 }).price, 0);
+test('ES, RJ e SP têm frete fixo de R$ 40 independentemente de compra e peso', () => {
+  for (const state of ['ES', 'RJ', 'SP']) {
+    for (const subtotal of [80, 300, 1000]) {
+      const shipping = calculateShipping({ state, subtotal, totalWeightG: 50000 });
+      assert.equal(shipping.price, 40);
+      assert.equal(shipping.free, false);
+    }
+  }
 });
 
-test('frete fora do Sudeste abaixo de R$ 300 é positivo', () => {
-  assert.ok(calculateShipping({ state: 'BA', subtotal: 100, totalWeightG: 500 }).price > 0);
+test('entrega fora do Sudeste ou estado inválido é indisponível, inclusive acima de R$ 300', () => {
+  for (const state of ['BA', 'PR', 'DF', 'AM', 'XX', '']) {
+    assert.throws(() => calculateShipping({ state, subtotal: 1000, totalWeightG: 500 }), error => error.code === 'SHIPPING_UNAVAILABLE' && error.status === 422);
+  }
 });
 
 test('gateway mock preserva cenário', () => {

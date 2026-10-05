@@ -175,5 +175,12 @@
   };
 
   window.money = (value) => Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  window.bag = (key) => `/assets/illustrations/${/^[a-z0-9-]+$/.test(key || '') ? key : 'bag-red'}.svg`;
+  window.bag = (key) => {
+    if (key === 'cappuccino') return '/assets/photos/cappuccino-realista.png';
+    if (key === 'moka') return '/assets/photos/ritual-moka-realista.png';
+    return '/assets/photos/cafe-embalado-realista.png';
+  };
+  const photoStyles = document.createElement('style');
+  photoStyles.textContent = '.hero-art img{width:100%;height:100%;min-height:360px;object-fit:cover;filter:none;transform:none}.ritual-art,.family-illustration img{border-radius:18px;object-fit:cover}.product-visual{padding:.75rem}.product-visual img{width:100%;height:230px;object-fit:cover;border-radius:12px;filter:none}.detail-art img{width:100%;max-height:520px;object-fit:cover;border-radius:16px}';
+  document.head.appendChild(photoStyles);
 })();

@@ -13,7 +13,7 @@ test('upgrade real preserva IDs, pedidos, pagamentos, pontos, estoque customizad
   db.exec("INSERT INTO grind_types (id,name,slug) VALUES (99,'Teste sequência','teste-sequencia'); INSERT INTO product_variants (id,product_id,grind_type_id,sku,weight_g,price,stock) VALUES (9000,1,99,'DELETED-SEQUENCE',500,12,3); DELETE FROM product_variants WHERE id=9000; DELETE FROM grind_types WHERE id=99");
   const snapshots = Object.fromEntries(['users','orders','order_items','payments','order_status_history','loyalty_transactions','favorites','addresses','customer_rewards','stock_notifications'].map(table=>[table,db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()]));
   const variants = db.prepare('SELECT * FROM product_variants ORDER BY id').all();
-  for(const name of ['0001_baseline.sql','0002_flexible_variants.sql','0003_official_catalog.sql']) migrate(db,name);
+  for(const name of ['0001_baseline.sql','0002_flexible_variants.sql','0003_official_catalog.sql','0004_simplified_catalog.sql']) migrate(db,name);
   for(const [table,rows] of Object.entries(snapshots)) assert.deepEqual(db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all(),rows,table);
   for(const row of variants) {
     const upgraded=db.prepare('SELECT * FROM product_variants WHERE id=?').get(row.id);
@@ -21,7 +21,8 @@ test('upgrade real preserva IDs, pedidos, pagamentos, pontos, estoque customizad
     assert.equal(upgraded.unit_type,'weight'); assert.match(upgraded.label,/g ·/);
   }
   assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(),[]);
-  assert.equal(db.prepare('SELECT COUNT(*) n FROM products WHERE active=1').get().n,19);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM products WHERE active=1').get().n,8);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM products WHERE active=0 AND slug IN (\'affogato\',\'bicerin\',\'caffe-corretto\',\'caffe-freddo\',\'caffe-latte\',\'espresso\',\'lungo\',\'macchiato\',\'marocchino\',\'ristretto\',\'shakerato\')').get().n,11);
   assert.equal(db.prepare('SELECT COUNT(*) n FROM products WHERE id<=9 AND active=0').get().n,9);
   assert.ok(db.prepare('SELECT MIN(id) n FROM product_variants WHERE id>126').get().n>9000);
   assert.throws(()=>db.prepare("INSERT INTO order_items (order_id,product_variant_id,product_name,variant_label,quantity,unit_price,total_price) VALUES ('demo-order-001',-1,'bad','bad',1,1,1)").run(),/FOREIGN KEY/);
@@ -30,7 +31,7 @@ test('upgrade real preserva IDs, pedidos, pagamentos, pontos, estoque customizad
   db.close();
 });
 
-test('catálogo completo tem21 variantes embaladas e bebidas sem peso ou moagem; reexecução preserva personalizações',()=>{
+test('catálogo preserva registros e desativa 11 bebidas sem apagar variantes; reexecução preserva personalizações',()=>{
   const db=new DatabaseSync(':memory:');
   for(const name of ['0001_baseline.sql','0002_flexible_variants.sql','0003_official_catalog.sql']) migrate(db,name);
   assert.equal(db.prepare('SELECT COUNT(*) n FROM users').get().n,0,'migrations nunca inserem usuários');
@@ -40,6 +41,13 @@ test('catálogo completo tem21 variantes embaladas e bebidas sem peso ou moagem;
   for(const row of packaged) { assert.equal(row.n,21); assert.equal(row.weights,3); assert.equal(row.grinds,7); }
   assert.equal(db.prepare("SELECT COUNT(*) n FROM products p JOIN product_variants v ON v.product_id=p.id WHERE p.product_kind='beverage' AND (v.weight_g IS NOT NULL OR v.grind_type_id IS NOT NULL)").get().n,0);
   const id=db.prepare("SELECT id FROM products WHERE slug='espresso'").get().id;
+  const historyBefore=db.prepare('SELECT COUNT(*) n FROM product_variants WHERE product_id=?').get(id).n;
+  migrate(db,'0004_simplified_catalog.sql');
+  assert.equal(db.prepare('SELECT active FROM products WHERE id=?').get(id).active,0);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM product_variants WHERE product_id=?').get(id).n,historyBefore);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM products WHERE active=1').get().n,8);
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM products WHERE product_kind='beverage' AND active=1").get().n,2);
+  migrate(db,'0004_simplified_catalog.sql');
   db.prepare("UPDATE products SET name='Espresso da Casa',active=0 WHERE id=?").run(id);
   db.prepare('UPDATE product_variants SET price=99,stock=2 WHERE product_id=?').run(id);
   migrate(db,'0003_official_catalog.sql');
@@ -54,7 +62,7 @@ test('catálogo completo tem21 variantes embaladas e bebidas sem peso ou moagem;
 test('reset exclusivo local remove guardas e histórico de migração permitindo inicialização completa novamente',()=>{
   const db=new DatabaseSync(':memory:');
   db.exec(sql('schema.sql')); db.exec(sql('seed.sql'));
-  const files=['0001_baseline.sql','0002_flexible_variants.sql','0003_official_catalog.sql'];
+  const files=['0001_baseline.sql','0002_flexible_variants.sql','0003_official_catalog.sql','0004_simplified_catalog.sql'];
   for(const name of files) migrate(db,name);
   db.exec("CREATE TABLE d1_migrations (id INTEGER PRIMARY KEY,name TEXT NOT NULL); INSERT INTO d1_migrations VALUES (1,'0001_baseline.sql')");
   db.exec("INSERT INTO order_mutation_guards (order_id,operation,valid_state) VALUES ('demo-order-001','resolve_payment',1)");
@@ -63,7 +71,7 @@ test('reset exclusivo local remove guardas e histórico de migração permitindo
   assert.equal(db.prepare('PRAGMA foreign_keys').get().foreign_keys,1);
   db.exec(sql('schema.sql')); db.exec(sql('seed.sql'));
   for(const name of files) migrate(db,name);
-  assert.equal(db.prepare('SELECT COUNT(*) n FROM products WHERE active=1').get().n,19);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM products WHERE active=1').get().n,8);
   assert.equal(db.prepare('SELECT COUNT(*) n FROM order_items').get().n,1);
   assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(),[]);
   db.close();

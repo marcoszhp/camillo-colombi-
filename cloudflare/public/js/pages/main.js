@@ -42,8 +42,8 @@
           $('#productGrid').innerHTML = '<div class="empty">Nenhum café encontrado com esses filtros.</div>';
         } else {
           const groups = [
-            { title: 'Para levar para casa.', subtitle: 'Cafés em saco · grãos e moagens', rows: rows.filter((p) => p.product_kind === 'packaged') },
-            { title: 'O prazer da próxima xícara.', subtitle: 'Bebidas e preparos · escolhas de cafeteria', rows: rows.filter((p) => p.product_kind !== 'packaged') }
+            { title: 'Cafés em saco', subtitle: 'Grãos e moagens', rows: rows.filter((p) => p.product_kind === 'packaged') },
+            { title: 'Bebidas', subtitle: 'Preparadas na cafeteria', rows: rows.filter((p) => p.product_kind !== 'packaged') }
           ];
           $('#productGrid').innerHTML = groups.filter((group) => group.rows.length).map((group) => `<section class="catalog-group"><div class="section-head"><div><span class="eyebrow">${group.subtitle}</span><h2>${group.title}</h2></div><span class="muted">${group.rows.length} opções</span></div><div class="grid grid-3">${group.rows.map(productCard).join('')}</div></section>`).join('');
         }
@@ -69,7 +69,7 @@
       const p = await CamilloAPI.get(`/products/${encodeURIComponent(slug)}`);
       const packaged = p.product_kind === 'packaged';
       $('#productRoot').innerHTML = `
-        <div class="detail-art"><img src="${bag(p.image_key)}" alt="Ilustração de ${escapeHtml(p.name)}"></div>
+        <div class="detail-art"><img src="${bag(p.image_key)}" alt="Foto de ${escapeHtml(p.name)}"></div>
         <div>
           <div style="display:flex;gap:.5rem;flex-wrap:wrap">
             <span class="badge">${escapeHtml(p.category_name || (packaged ? 'Café em saco' : 'Preparado'))}</span>
@@ -98,7 +98,7 @@
           <p class="muted" style="margin-top:1rem"><strong>Preparo:</strong> ${escapeHtml(p.brew_suggestion || 'Consulte a moagem adequada ao seu método.')}</p>
           ${packaged && p.conservation_info ? `<p class="muted"><strong>Conservação:</strong> ${escapeHtml(p.conservation_info)}</p>` : ''}
           ${packaged && p.roasting_info ? `<p class="muted"><strong>Torrefação:</strong> ${escapeHtml(p.roasting_info)}</p>` : ''}
-          <p class="catalog-disclaimer">Preço de demonstração. Frete grátis no Sudeste ou em pedidos a partir de R$ 300. Pagamento simulado.</p>
+          <p class="catalog-disclaimer">Projeto acadêmico. Pagamento simulado. Entrega apenas no Sudeste: MG grátis; ES, RJ e SP por R$ 40.</p>
         </div>`;
 
       const select = $('#variant');
@@ -167,7 +167,7 @@
       }
       root.innerHTML = `
         <div>${items.map((i) => `<div class="cart-row"><div><strong>${escapeHtml(i.name)}</strong><div class="muted">${escapeHtml(variantLabel(i))}</div><button class="btn btn-ghost remove" data-id="${i.variantId}" aria-label="Remover ${escapeHtml(i.name)}">Remover</button></div><div style="text-align:right"><input class="input qty" aria-label="Quantidade de ${escapeHtml(i.name)}" style="width:88px" type="number" min="1" value="${i.quantity}" data-id="${i.variantId}"><strong style="display:block;margin-top:.5rem">${money(i.price * i.quantity)}</strong></div></div>`).join('')}</div>
-        <aside class="card order-summary"><h3>Resumo</h3><p style="display:flex;justify-content:space-between"><span>Subtotal</span><strong>${money(CamilloCart.subtotal())}</strong></p><p class="muted">Frete calculado no checkout. Sudeste e pedidos a partir de R$ 300 têm frete grátis.</p><a class="btn btn-primary" style="width:100%" href="/checkout">Continuar</a></aside>`;
+        <aside class="card order-summary"><h3>Resumo</h3><p style="display:flex;justify-content:space-between"><span>Subtotal</span><strong>${money(CamilloCart.subtotal())}</strong></p><p class="muted">Entrega apenas no Sudeste: MG grátis; ES, RJ e SP por R$ 40.</p><a class="btn btn-primary" style="width:100%" href="/checkout">Continuar</a></aside>`;
       $$('.remove').forEach((button) => button.addEventListener('click', () => { CamilloCart.remove(button.dataset.id); render(); }));
       $$('.qty').forEach((input) => input.addEventListener('change', () => { CamilloCart.update(input.dataset.id, input.value); render(); }));
     }
@@ -182,7 +182,12 @@
       try {
         const data = await CamilloAPI.post(mode === 'login' ? '/auth/login' : '/auth/register', body);
         CamilloAuth.setSession(data);
-        const next = new URLSearchParams(location.search).get('next');
+        const requestedNext = new URLSearchParams(location.search).get('next');
+        let next = null;
+        try {
+          const destination = new URL(requestedNext, location.origin);
+          if (requestedNext && destination.origin === location.origin) next = `${destination.pathname}${destination.search}${destination.hash}`;
+        } catch { /* Usa o destino padrão quando next não é um caminho válido. */ }
         location.href = next || (data.user.role === 'admin' ? '/admin' : '/minha-conta');
       } catch (error) {
         $('#authError').textContent = error.message;

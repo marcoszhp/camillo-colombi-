@@ -1,11 +1,10 @@
-export function calculateShipping({ state, subtotal, totalWeightG }) {
-  const uf = String(state || '').toUpperCase();
-  const amount = Number(subtotal || 0);
+import { AppError } from './http.js';
+
+export function calculateShipping({ state }) {
+  const uf = String(state || '').trim().toUpperCase();
   const southeast = new Set(['ES', 'MG', 'RJ', 'SP']);
-  if (southeast.has(uf) || amount >= 300) return { price: 0, free: true, estimatedDays: uf === 'ES' ? 3 : 5, rule: southeast.has(uf) ? 'SUDESTE' : 'ACIMA_300' };
-  const weightKg = Math.max(0.25, Number(totalWeightG || 0) / 1000);
-  const regionBase = ['PR', 'SC', 'RS'].includes(uf) ? 24.9 : ['GO', 'DF', 'MT', 'MS'].includes(uf) ? 29.9 : 34.9;
-  return { price: Number((regionBase + Math.max(0, weightKg - 0.5) * 4.5).toFixed(2)), free: false, estimatedDays: 8, rule: 'SIMULACAO_LOCAL' };
+  if (!southeast.has(uf)) throw new AppError('Entregamos apenas em Minas Gerais, Espírito Santo, Rio de Janeiro e São Paulo.', 422, 'SHIPPING_UNAVAILABLE');
+  return { price: uf === 'MG' ? 0 : 40, free: uf === 'MG', estimatedDays: uf === 'ES' ? 3 : 5, rule: uf === 'MG' ? 'MG_GRATIS' : 'SUDESTE_FIXO' };
 }
 
 export function mockPayment({ method, brand = null, scenario = 'approved' }) {

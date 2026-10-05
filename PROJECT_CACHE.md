@@ -26,9 +26,15 @@ Migrations versionadas: `0001_baseline`, `0002_flexible_variants` e `0003_offici
 
 ## Validação e próximo passo
 
+**Ajuste solicitado em 05/10/2026 (ainda não publicado):** migration `0004_simplified_catalog.sql` desativa Affogato, Bicerin, Caffè Corretto, Caffè Freddo, Caffè Latte, Espresso, Lungo, Macchiato, Marocchino, Ristretto e Shakerato, preservando produtos/variantes para os pedidos históricos. Após aplicação, o catálogo ativo terá 8 produtos (6 cafés em saco e 2 bebidas). Interface mais concisa, frete informado como entrega apenas no Sudeste (MG grátis; ES/RJ/SP R$ 40) e expiração de token limpa a sessão e leva ao login com retorno interno. `npm run check` e `node --test tests/migrations.test.mjs` aprovados. Pendentes integração/revisão e aplicação autorizada pelo coordenador; sem deploy feito por esta alteração.
+
 23/23 testes, npm run check e deploy --dry-run finais aprovados em 05/10. Fixture local refeita com todas as migrations; integridade SQLite ok e nenhuma violação de chave estrangeira. Links locais corrigidos. Interface conferida em 360, 768 e 1280 px sem overflow; 1600 px não comprovado por limitação da ferramenta. Checkout mock local concluído com Espresso 60 ml; administração e variantes conferidas.
 
 Usuário autorizou publicar GitHub/Cloudflare e enviar o link por e-mail após confirmação. Backup privado pré-publicação salvo em cloudflare/reports (ignorado pelo Git). Base remota anterior: 9 produtos, 2 pedidos, 3 usuários, estoque legado 2530 e pontos 343. Migrations e deploy concluídos. Conferência remota: 19 produtos ativos, 2 pedidos, 3 usuários, estoque legado 2530 e pontos 343 preservados; foreign_key_check vazio. Health e catálogo HTTP 200. Site conferido no navegador; captura em reports/site-online.jpg. E-mail com link enviado ao destinatário solicitado (Gmail confirmou SENT). Sem pendências de publicação; pagamentos permanecem mock.
+
+Atualização de 05/10/2026 em validação: catálogo simplificado para 8 produtos ativos (6 cafés embalados, Cappuccino e Moka), preservando os 11 produtos retirados e seus históricos como inativos. Frete passa a aceitar apenas MG/ES/RJ/SP: MG grátis e R$ 40 para ES, RJ e SP. Sessões vencidas são limpas pelo frontend; login e registro não reutilizam token antigo. JWT ganhou validação estrutural e de algoritmo.
+
+Cinco fotos realistas geradas com a ferramenta integrada foram salvas em `cloudflare/public/assets/photos/`: fachada, ritual com Moka, origem capixaba, embalagem e cappuccino. Home, catálogo, detalhe e página de cultura usam essas fotos; cultura foi reduzida aos preparos ainda oferecidos. Validação local: 28/28 testes, `npm run check`, deploy dry-run, migration 0004 local e inspeção visual sem erros de console. Ainda não publicado remotamente nesta atualização.
 
 Preservar margem preventiva de uso de 5%; consultar antes de etapas grandes. Nunca resetar produção nem incluir backup, segredos ou estado local no Git.
 

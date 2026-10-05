@@ -32,6 +32,8 @@ Filtros de `/products`: `search`, `sensory`, `roast`, `origin`, `type`, `intensi
 
 Enviar `Authorization: Bearer <token>`.
 
+O token de sessão vence após 8 horas. `AUTH_REQUIRED` e `INVALID_TOKEN` (HTTP 401) exigem novo login; tokens inválidos ou malformados não são aceitos. Login e cadastro emitem uma sessão nova.
+
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/auth/me` | Perfil atual |
@@ -66,6 +68,8 @@ Enviar `Authorization: Bearer <token>`.
 ```
 
 Cenários de demonstração: `approved`, `pending`, `declined`, `canceled`.
+
+Entregas somente para MG, ES, RJ e SP. MG tem frete grátis; ES, RJ e SP têm frete fixo de R$ 40, sem desconto por valor do pedido ou peso. O servidor calcula o frete e o total; endereços fora do Sudeste retornam HTTP 422, código `SHIPPING_UNAVAILABLE`, sem criar pedido, pagamento ou alterar estoque/pontos. Pedidos anteriores preservam seu frete original.
 
 ## Admin
 

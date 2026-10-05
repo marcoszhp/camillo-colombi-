@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import worker from '../worker/index.js';
+import { signToken } from '../worker/lib/crypto.js';
 import { resolvePendingPayment, updateOrderStatus } from '../worker/routes/orders.js';
 
 class D1StatementMock {
@@ -21,7 +22,7 @@ class D1Mock {
     this.db = new DatabaseSync(':memory:');
     this.db.exec(fs.readFileSync(new URL('../database/schema.sql', import.meta.url), 'utf8'));
     this.db.exec(fs.readFileSync(new URL('../database/seed.sql', import.meta.url), 'utf8'));
-    for (const file of ['0001_baseline.sql','0002_flexible_variants.sql','0003_official_catalog.sql']) {
+    for (const file of ['0001_baseline.sql','0002_flexible_variants.sql','0003_official_catalog.sql','0004_simplified_catalog.sql']) {
       this.db.exec('BEGIN IMMEDIATE');
       this.db.exec(fs.readFileSync(new URL(`../database/migrations/${file}`, import.meta.url), 'utf8'));
       this.db.exec('COMMIT');
@@ -71,6 +72,76 @@ async function login(env, email, password) {
   return json.data.token;
 }
 
+test('login renova sessão expirada e rejeita tokens inválidos sem erro interno', async () => {
+  const env = makeEnv();
+  const user = env.DB.db.prepare('SELECT id,email,role,name FROM users WHERE id=2').get();
+  const expired = await signToken(user, env.JWT_SECRET, -1);
+  for (const token of [expired, 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIn0.!']) {
+    const result = await api(env, '/auth/me', { token });
+    assert.equal(result.response.status, 401);
+    assert.equal(result.json.error.code, 'INVALID_TOKEN');
+  }
+  const result = await api(env, '/auth/login', {
+    method: 'POST', token: expired,
+    body: { email: user.email, password: 'Cliente@123' }
+  });
+  assert.equal(result.response.status, 200);
+  const me = await api(env, '/auth/me', { token: result.json.data.token });
+  assert.equal(me.response.status, 200);
+  assert.equal(me.json.data.id, user.id);
+  const wrongPassword = await api(env, '/auth/login', { method: 'POST', body: { email: user.email, password: 'incorreta' } });
+  assert.equal(wrongPassword.response.status, 401);
+  assert.equal(wrongPassword.json.error.code, 'INVALID_CREDENTIALS');
+});
+
+test('checkout aplica frete fixo do Sudeste e bloqueia outras regiões sem efeitos', async () => {
+  const env = makeEnv();
+  const token = await login(env, 'cliente@caffecamillo.local', 'Cliente@123');
+  const variant = env.DB.db.prepare("SELECT v.* FROM product_variants v JOIN products p ON p.id=v.product_id WHERE p.slug='caffe-arabica' ORDER BY v.id LIMIT 1").get();
+  const address = { name:'Cliente',email:'cliente@caffecamillo.local',phone:'31999990000',zipCode:'30000-000',street:'Rua',number:'1',district:'Centro',city:'Cidade',state:'MG' };
+  const quantity = Math.ceil(300 / variant.price);
+  for (const state of ['MG', 'ES', 'RJ', 'SP']) {
+    const result = await api(env, '/orders', { method:'POST',token,body:{items:[{variantId:variant.id,quantity}],paymentMethod:'pix',paymentScenario:'pending',shippingAddress:{...address,state},shippingAmount:0} });
+    assert.equal(result.response.status, 201, JSON.stringify(result.json));
+    const expected = state === 'MG' ? 0 : 40;
+    assert.equal(result.json.data.shipping.price, expected);
+    assert.equal(result.json.data.total, result.json.data.subtotal + expected);
+    const stored = env.DB.db.prepare('SELECT shipping_amount,total FROM orders WHERE order_number=?').get(result.json.data.orderNumber);
+    assert.equal(stored.shipping_amount, expected);
+    assert.equal(stored.total, result.json.data.total);
+  }
+  const snapshot = () => ({
+    orders: env.DB.db.prepare('SELECT COUNT(*) n FROM orders').get().n,
+    payments: env.DB.db.prepare('SELECT COUNT(*) n FROM payments').get().n,
+    stock: env.DB.db.prepare('SELECT stock FROM product_variants WHERE id=?').get(variant.id).stock,
+    points: env.DB.db.prepare('SELECT loyalty_points FROM users WHERE id=2').get().loyalty_points
+  });
+  const before = snapshot();
+  for (const state of ['BA', 'PR', 'DF', 'AM', 'XX']) {
+    const result = await api(env, '/orders', { method:'POST',token,body:{items:[{variantId:variant.id,quantity}],paymentMethod:'pix',paymentScenario:'approved',shippingAddress:{...address,state}} });
+    assert.equal(result.response.status, 422);
+    assert.equal(result.json.error.code, 'SHIPPING_UNAVAILABLE');
+    assert.deepEqual(snapshot(), before);
+  }
+});
+
+test('bebidas retiradas não aparecem e carrinho antigo não cria pedido nem muda estoque', async () => {
+  const env = makeEnv();
+  const token = await login(env, 'cliente@caffecamillo.local', 'Cliente@123');
+  const removed = ['affogato','bicerin','caffe-corretto','caffe-freddo','caffe-latte','espresso','lungo','macchiato','marocchino','ristretto','shakerato'];
+  const beforeOrders = env.DB.db.prepare('SELECT COUNT(*) n FROM orders').get().n;
+  for (const slug of removed) {
+    const detail = await api(env, `/products/${slug}`);
+    assert.equal(detail.response.status, 404, slug);
+    const variant = env.DB.db.prepare('SELECT v.id,v.stock FROM product_variants v JOIN products p ON p.id=v.product_id WHERE p.slug=? ORDER BY v.id LIMIT 1').get(slug);
+    const result = await api(env, '/orders', { method:'POST',token,body:{items:[{variantId:variant.id,quantity:1}],paymentMethod:'pix',paymentScenario:'approved',shippingAddress:{ name:'Cliente',email:'cliente@caffecamillo.local',phone:'31999990000',zipCode:'30000-000',street:'Rua',number:'1',district:'Centro',city:'Cidade',state:'MG' }} });
+    assert.equal(result.response.status, 409, slug);
+    assert.equal(result.json.error.code, 'VARIANT_UNAVAILABLE');
+    assert.equal(env.DB.db.prepare('SELECT stock FROM product_variants WHERE id=?').get(variant.id).stock, variant.stock);
+  }
+  assert.equal(env.DB.db.prepare('SELECT COUNT(*) n FROM orders').get().n, beforeOrders);
+});
+
 test('Worker executa catálogo, login, compra, pontos, admin e cancelamento', async () => {
   const env = makeEnv();
 
@@ -80,7 +151,7 @@ test('Worker executa catálogo, login, compra, pontos, admin e cancelamento', as
 
   result = await api(env, '/products');
   assert.equal(result.response.status, 200);
-  assert.equal(result.json.data.length, 19);
+  assert.equal(result.json.data.length, 8);
 
   const customerToken = await login(env, 'cliente@caffecamillo.local', 'Cliente@123');
   const adminToken = await login(env, 'admin@caffecamillo.local', 'Admin@123');
@@ -131,7 +202,7 @@ test('pagamento pendente só baixa estoque quando admin aprova', async () => {
   const env = makeEnv();
   const customerToken = await login(env, 'cliente@caffecamillo.local', 'Cliente@123');
   const adminToken = await login(env, 'admin@caffecamillo.local', 'Admin@123');
-  const variantId = env.DB.db.prepare("SELECT v.id FROM product_variants v JOIN products p ON p.id=v.product_id WHERE p.slug='espresso' ORDER BY v.id LIMIT 1").get().id;
+  const variantId = env.DB.db.prepare("SELECT v.id FROM product_variants v JOIN products p ON p.id=v.product_id WHERE p.slug='cappuccino' ORDER BY v.id LIMIT 1").get().id;
   const before = env.DB.db.prepare('SELECT stock FROM product_variants WHERE id=?').get(variantId).stock;
 
   let result = await api(env, '/orders', {
@@ -173,7 +244,7 @@ const shippingAddress = { name:'Cliente',email:'cliente@caffecamillo.local',phon
 test('filtros oficiais, origens, aromatização e detalhe de variantes flexíveis', async()=>{
   const env=makeEnv();
   let result=await api(env,'/products?category=bebidas');
-  assert.equal(result.json.data.length,13);
+  assert.equal(result.json.data.length,2);
   assert.ok(result.json.data.every(p=>p.product_kind==='beverage' && p.category_slug==='bebidas' && p.image_key===p.slug));
   result=await api(env,'/products?type=packaged&weight=1000&grind=extra-fina&origin=domingos-martins&roast=media&minPrice=100&maxPrice=300&available=true');
   assert.equal(result.response.status,200); assert.equal(result.json.data.length,5);
@@ -182,11 +253,12 @@ test('filtros oficiais, origens, aromatização e detalhe de variantes flexívei
   result=await api(env,'/products/caffe-arabica');
   assert.equal(result.json.data.variants.length,21);
   assert.deepEqual([...new Set(result.json.data.variants.map(v=>v.weight_g))],[250,500,1000]);
-  result=await api(env,'/products/espresso');
-  assert.deepEqual(result.json.data.variants.map(v=>v.volume_ml),[30,60]);
+  result=await api(env,'/products/cappuccino');
+  assert.deepEqual(result.json.data.variants.map(v=>v.volume_ml),[180,250]);
   assert.ok(result.json.data.variants.every(v=>v.unit_type==='volume' && v.weight_g===null && v.grind_type_id===null && v.grind_type===null && v.label.endsWith('ml')));
   result=await api(env,'/products/affogato');
-  assert.deepEqual(result.json.data.variants.map(v=>v.label),['Normal','Grande']);
+  assert.equal(result.response.status,404);
+  assert.equal(result.json.error.code,'PRODUCT_NOT_FOUND');
   result=await api(env,'/products/filters');
   assert.equal(result.json.data.grinds.length,7); assert.equal(result.json.data.categories.length,2);
   assert.deepEqual(result.json.data.productKinds,['packaged','beverage','dessert']);
@@ -212,7 +284,7 @@ test('filtros combinados exigem uma mesma variante no intervalo, peso, moagem e 
 
 test('admin cria e edita SKU, rótulo, estoque, peso1000g, volume e unidade sem remover histórico', async()=>{
   const env=makeEnv(); const token=await login(env,'admin@caffecamillo.local','Admin@123');
-  const productId=env.DB.db.prepare("SELECT id FROM products WHERE slug='espresso'").get().id;
+  const productId=env.DB.db.prepare("SELECT id FROM products WHERE slug='cappuccino'").get().id;
   let result=await api(env,'/admin/products',{token});
   assert.equal(result.json.data.length,28); assert.ok(result.json.data.some(p=>p.active===0));
   assert.ok(result.json.data.every(p=>Array.isArray(p.variants)));
@@ -242,7 +314,7 @@ test('admin cria e edita SKU, rótulo, estoque, peso1000g, volume e unidade sem 
 
 test('checkout bebidas guarda rótulos, aceita4 bandeiras e não baixa estoque recusado/cancelado',async()=>{
   const env=makeEnv(); const token=await login(env,'cliente@caffecamillo.local','Cliente@123');
-  const v=env.DB.db.prepare("SELECT v.* FROM product_variants v JOIN products p ON p.id=v.product_id WHERE p.slug='affogato' ORDER BY v.id LIMIT 1").get();
+  const v=env.DB.db.prepare("SELECT v.* FROM product_variants v JOIN products p ON p.id=v.product_id WHERE p.slug='cappuccino' ORDER BY v.id LIMIT 1").get();
   for(const scenario of ['declined','canceled']) {
     const result=await api(env,'/orders',{method:'POST',token,body:{items:[{variantId:v.id,quantity:1}],paymentMethod:'pix',paymentScenario:scenario,shippingAddress}});
     assert.equal(result.response.status,201); assert.equal(env.DB.db.prepare('SELECT stock FROM product_variants WHERE id=?').get(v.id).stock,v.stock);
@@ -251,7 +323,7 @@ test('checkout bebidas guarda rótulos, aceita4 bandeiras e não baixa estoque r
     const result=await api(env,'/orders',{method:'POST',token,body:{items:[{variantId:v.id,quantity:1}],paymentMethod:'card',cardBrand:brand,paymentScenario:'approved',shippingAddress}});
     assert.equal(result.response.status,201,JSON.stringify(result.json));
     assert.equal(env.DB.db.prepare('SELECT stock FROM product_variants WHERE id=?').get(v.id).stock,v.stock-index-1);
-    const detail=await api(env,`/orders/${result.json.data.orderNumber}`,{token}); assert.equal(detail.json.data.items[0].variant_label,'Normal');
+    const detail=await api(env,`/orders/${result.json.data.orderNumber}`,{token}); assert.equal(detail.json.data.items[0].variant_label,v.label);
   }
   const before=env.DB.db.prepare('SELECT COUNT(*) n FROM orders').get().n;
   const result=await api(env,'/orders',{method:'POST',token,body:{items:[{variantId:v.id,quantity:1}],paymentMethod:'card',cardBrand:'visa',card:{pan:'4111111111111111',cvv:'123'},shippingAddress}});
@@ -261,7 +333,7 @@ test('checkout bebidas guarda rótulos, aceita4 bandeiras e não baixa estoque r
 
 test('dupla aprovação e cancelamento concorrentes atualizam estoque e pontos exatamente uma vez', async()=>{
   const env=makeEnv(); const token=await login(env,'cliente@caffecamillo.local','Cliente@123');
-  const v=env.DB.db.prepare("SELECT v.* FROM product_variants v JOIN products p ON p.id=v.product_id WHERE p.slug='espresso' ORDER BY v.id LIMIT 1").get();
+  const v=env.DB.db.prepare("SELECT v.* FROM product_variants v JOIN products p ON p.id=v.product_id WHERE p.slug='cappuccino' ORDER BY v.id LIMIT 1").get();
   const beforePoints=env.DB.db.prepare('SELECT loyalty_points FROM users WHERE id=2').get().loyalty_points;
   const result=await api(env,'/orders',{method:'POST',token,body:{items:[{variantId:v.id,quantity:2}],paymentMethod:'pix',paymentScenario:'pending',shippingAddress}});
   assert.equal(result.response.status,201);
@@ -281,7 +353,7 @@ test('dupla aprovação e cancelamento concorrentes atualizam estoque e pontos e
 
 test('avanço administrativo com leitura antiga não reabre pedido cancelado durante a transação',async()=>{
   const env=makeEnv(); const token=await login(env,'cliente@caffecamillo.local','Cliente@123');
-  const v=env.DB.db.prepare("SELECT v.* FROM product_variants v JOIN products p ON p.id=v.product_id WHERE p.slug='espresso' ORDER BY v.id LIMIT 1").get();
+  const v=env.DB.db.prepare("SELECT v.* FROM product_variants v JOIN products p ON p.id=v.product_id WHERE p.slug='cappuccino' ORDER BY v.id LIMIT 1").get();
   const beforePoints=env.DB.db.prepare('SELECT loyalty_points FROM users WHERE id=2').get().loyalty_points;
   const result=await api(env,'/orders',{method:'POST',token,body:{items:[{variantId:v.id,quantity:2}],paymentMethod:'pix',paymentScenario:'approved',shippingAddress}});
   assert.equal(result.response.status,201);
