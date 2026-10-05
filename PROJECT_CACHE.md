@@ -38,3 +38,5 @@ Cinco fotos realistas geradas com a ferramenta integrada foram salvas em `cloudf
 
 Preservar margem preventiva de uso de 5%; consultar antes de etapas grandes. Nunca resetar produção nem incluir backup, segredos ou estado local no Git.
 
+Em 05/10/2026, os cartões de produto da interface editorial receberam fundo branco, `padding: 20px` e cantos de 15px, conforme referência enviada. `npm run check` e 28/28 testes aprovados. Publicação direta no Cloudflare foi recusada com código 7403 por sessão local sem autorização; envio ao GitHub solicitado para acionar a integração disponível.
+
