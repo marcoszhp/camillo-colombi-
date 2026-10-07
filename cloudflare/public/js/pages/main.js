@@ -21,6 +21,12 @@
   async function catalog() {
     const form = $('#filters');
     let requestNumber = 0;
+    document.querySelector('.catalog-disclaimer')?.remove();
+    const visibleFilters = new Set(['category', 'type', 'grind', 'sensory', 'weight', 'sort']);
+    form?.querySelectorAll('.field').forEach((field) => {
+      const control = field.querySelector('select, input');
+      if (!visibleFilters.has(control?.name || control?.id)) field.remove();
+    });
 
     // Carrega parâmetros da URL para permitir links diretos como /cafes?roast=media.
     const initial = new URLSearchParams(location.search);
@@ -95,10 +101,10 @@
             <div class="field"><label for="qty">Quantidade</label><input class="input" id="qty" type="number" min="1" value="1"></div>
           </div>
           <div id="buyArea" style="display:flex;gap:.8rem;align-items:center;margin-top:1rem"></div>
-          <p class="muted" style="margin-top:1rem"><strong>Preparo:</strong> ${escapeHtml(p.brew_suggestion || 'Consulte a moagem adequada ao seu método.')}</p>
+          <p class="muted product-preparation"><strong>Preparo:</strong> ${escapeHtml(p.brew_suggestion || 'Consulte a moagem adequada ao seu método.')}</p>
           ${packaged && p.conservation_info ? `<p class="muted"><strong>Conservação:</strong> ${escapeHtml(p.conservation_info)}</p>` : ''}
           ${packaged && p.roasting_info ? `<p class="muted"><strong>Torrefação:</strong> ${escapeHtml(p.roasting_info)}</p>` : ''}
-          <p class="catalog-disclaimer">Projeto acadêmico. Pagamento simulado. Entrega apenas no Sudeste: MG grátis; ES, RJ e SP por R$ 40.</p>
+          <p class="stock-status" id="stockStatus" role="status" aria-live="polite"></p>
         </div>`;
 
       const select = $('#variant');
@@ -109,6 +115,8 @@
       function paintBuyArea() {
         const option = select.selectedOptions[0];
         const variant = p.variants.find((v) => String(v.id) === option?.value);
+        const stockStatus = $('#stockStatus');
+        if (stockStatus) stockStatus.textContent = variant ? `${variant.stock} unidade(s) disponíveis` : '';
         if (!option || Number(option.dataset.stock) <= 0) {
           buy.innerHTML = '<button class="btn btn-primary" disabled>Indisponível</button><button class="btn btn-outline" id="notify">Me avise quando voltar</button>';
           $('#notify')?.addEventListener('click', async () => {
