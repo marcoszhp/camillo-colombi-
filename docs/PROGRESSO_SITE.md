@@ -45,4 +45,6 @@ Arquitetura, procedência das mídias, licenças e evidências em [Animações d
 
 ## Próximo passo
 
-Obter e validar a mídia de Moka/Cappuccino sendo servido para finalizar a etapa de líquido.
+- ✅ Corrigida restrição que desativava também o botão em desktop com menos de 640 px de altura; versão compacta conferida em 1366×600 e 1280×480. Testes atuais: 34/34 e check aprovado.
+- ⏳ Publicar a correção de altura útil.
+- ⏳ Completar todos os processos de preparo solicitados: café moído/filtro, água, filtragem/extração e servir na xícara, com mídia realista. Usuário confirmou que a estrutura funciona e pediu ampliar as animações.
