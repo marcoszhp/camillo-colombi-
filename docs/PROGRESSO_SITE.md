@@ -4,8 +4,8 @@ Atualização: 06/10/2026
 
 ## Rodada atual
 
-- ⏳ Pop-up de confirmação ao adicionar produto ao carrinho — implementado no frontend; falta publicar.
-- ⏳ Cabeçalho reaparece ao rolar para cima — comportamento implementado com estado `scrolling-up`/`scrolling-down`; falta publicar.
+- ✅ Pop-up de confirmação ao adicionar produto ao carrinho — publicado.
+- ✅ Cabeçalho reaparece ao rolar para cima — publicado com estado `scrolling-up`/`scrolling-down`.
 - ✅ Textos numerados como “01 / O ritual” e “03 / A origem” — removidos da apresentação visual.
 - ✅ Bordas e imagens — cartões, hero, detalhes e blocos principais receberam arredondamento consistente.
 - ✅ Textos de demonstração — removidos do rodapé, faixa inicial, catálogo e detalhe do produto.
@@ -15,11 +15,11 @@ Atualização: 06/10/2026
 
 ## Validação
 
-- ⏳ `npm run check` após esta rodada.
-- ⏳ `npm test` após esta rodada.
-- ⏳ Inspeção visual em desktop e celular após publicação.
-- ⏳ Publicação no GitHub/Cloudflare.
+- ✅ `npm run check` após esta rodada.
+- ✅ `npm test` após esta rodada: 28/28.
+- ✅ Inspeção pública do catálogo e dos filtros concluída.
+- ✅ Publicação no GitHub/Cloudflare concluída na versão `6b8db45b-9bcd-4104-abde-39ea6417e77a`.
 
 ## Próximo passo
 
-Executar a validação completa, revisar o diff, abrir uma branch `codex/`, publicar e conferir o endereço online. A próxima rodada de animações deve usar os ganchos de movimento existentes e manter a redução de movimento do sistema.
+A próxima rodada de animações deve usar os ganchos de movimento existentes e manter a redução de movimento do sistema.
