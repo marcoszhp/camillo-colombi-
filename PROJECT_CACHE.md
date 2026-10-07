@@ -40,3 +40,5 @@ Preservar margem preventiva de uso de 5%; consultar antes de etapas grandes. Nun
 
 Em 05/10/2026, os cartões de produto da interface editorial receberam fundo branco, `padding: 20px` e cantos de 15px, conforme referência enviada. No modo escuro, o fundo do cartão passa a ser `#2a2621`. `npm run check` e 28/28 testes aprovados. PR #1 integrado à `main` no commit `c967c3d`; GitHub Actions run `37382491789` aprovado. O fluxo completo com migrations encontrou erro 7403 no D1, mas a publicação segura de Worker/assets, sem tocar no banco, foi concluída na versão Cloudflare `ca780028-aab7-4f21-a642-953c3779b98b`; CSS público conferido.
 
+Em 06/10/2026, nova rodada de interface em preparação: confirmação visual do carrinho, cabeçalho que reaparece ao subir, remoção de rótulos numerados e textos de demonstração, filtros laterais reduzidos, estoque visível nos cartões/detalhes, foco de moagem mais discreto, bordas arredondadas e documentação em `docs/PROGRESSO_SITE.md`. `npm run check` e 28/28 testes passaram localmente; publicação ainda pendente.
+

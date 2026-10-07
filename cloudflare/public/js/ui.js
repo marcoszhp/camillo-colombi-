@@ -40,7 +40,7 @@
   }
 
   function footer() {
-    return `<footer class="footer"><div class="container footer-grid"><div><a class="brand" href="/">Caffè ${camilloWord()} Colombi</a><p class="muted">Um café. Uma pausa. Uma boa conversa.<br>Projeto acadêmico demonstrativo.</p><small>Preços de demonstração · pagamento simulado</small></div><div class="footer-links"><strong>À mesa</strong><a href="/cafes">Nossos cafés</a><a href="/cultura-do-cafe">Cultura do café</a><a href="/historia-do-cappuccino">História do cappuccino</a><a href="/clube-camillo">Clube ${camilloWord()}</a></div><div class="footer-links"><strong>Conte com a gente</strong><a href="/privacidade">Privacidade</a><a href="/termos">Termos</a><a href="/contato">Contato</a></div></div><div class="container footer-sign">Ci vediamo al caffè.</div></footer>`;
+    return `<footer class="footer"><div class="container footer-grid"><div><a class="brand" href="/">Caffè ${camilloWord()} Colombi</a><p class="muted">Um café. Uma pausa. Uma boa conversa.</p></div><div class="footer-links"><strong>À mesa</strong><a href="/cafes">Nossos cafés</a><a href="/cultura-do-cafe">Cultura do café</a><a href="/historia-do-cappuccino">História do cappuccino</a><a href="/clube-camillo">Clube ${camilloWord()}</a></div><div class="footer-links"><strong>Conte com a gente</strong><a href="/privacidade">Privacidade</a><a href="/termos">Termos</a><a href="/contato">Contato</a></div></div><div class="container footer-sign">Ci vediamo al caffè.</div></footer>`;
   }
 
   function cartDrawer() {
@@ -49,9 +49,16 @@
 
   document.querySelectorAll('[data-header]').forEach((el) => { el.innerHTML = header(); });
   document.querySelectorAll('[data-footer]').forEach((el) => { el.innerHTML = footer(); });
-  document.body.insertAdjacentHTML('beforeend', cartDrawer());
+  document.body.insertAdjacentHTML('beforeend', `${cartDrawer()}<div class="cart-feedback" id="cartFeedback" role="status" aria-live="polite" hidden></div>`);
   document.querySelectorAll('[data-camillo]').forEach((el) => { el.innerHTML = camilloWord(); });
   document.querySelectorAll('.admin-sidebar strong').forEach((el) => { el.innerHTML = `Painel ${camilloWord()}`; });
+  document.querySelectorAll('.eyebrow').forEach((el) => {
+    if (/^\s*\d+\s*\/|O ritual|A origem/i.test(el.textContent || '')) el.remove();
+  });
+  document.querySelectorAll('.catalog-disclaimer').forEach((el) => el.remove());
+  document.querySelectorAll('.ribbon span').forEach((el) => {
+    if (/preços de demonstração|pagamento simulado/i.test(el.textContent || '')) el.remove();
+  });
 
   const saved = localStorage.getItem('camillo_theme');
   if (saved) document.documentElement.dataset.theme = saved;
@@ -105,6 +112,16 @@
   }
 
   document.getElementById('cartButton')?.addEventListener('click', openDrawer);
+  window.addEventListener('cartadded', (event) => {
+    const feedback = document.getElementById('cartFeedback');
+    if (!feedback) return;
+    feedback.innerHTML = `<strong>Produto adicionado</strong><span>${safe(event.detail?.name || 'Sua escolha')} está no carrinho.</span><a href="/carrinho" class="btn btn-small btn-primary">Ver carrinho</a><button type="button" class="icon-btn" aria-label="Fechar aviso">${icon('close')}</button>`;
+    feedback.hidden = false;
+    feedback.classList.add('show');
+    feedback.querySelector('button')?.addEventListener('click', () => { feedback.classList.remove('show'); setTimeout(() => { feedback.hidden = true; }, 180); });
+    clearTimeout(window.__cartFeedbackTimer);
+    window.__cartFeedbackTimer = setTimeout(() => { feedback.classList.remove('show'); setTimeout(() => { feedback.hidden = true; }, 180); }, 4200);
+  });
   document.getElementById('closeDrawer')?.addEventListener('click', closeDrawer);
   backdrop.addEventListener('click', closeDrawer);
   document.addEventListener('keydown', (event) => {
@@ -131,6 +148,11 @@
   let frame = 0;
   const art = document.querySelector('[data-parallax]');
   function onScroll() {
+    const current = scrollY;
+    const previous = Number(document.body.dataset.previousScroll || 0);
+    document.body.classList.toggle('scrolling-down', current > previous && current > 90);
+    document.body.classList.toggle('scrolling-up', current < previous || current <= 90);
+    document.body.dataset.previousScroll = String(current);
     if (frame || motion.matches || !art || innerWidth < 768) return;
     frame = requestAnimationFrame(() => {
       art.style.setProperty('--shift', `${Math.min(32, Math.max(-32, scrollY * .045))}px`);
@@ -152,7 +174,8 @@
       document.documentElement.classList.add('motion-ready');
       document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
     }
-    if (art && innerWidth >= 768) window.addEventListener('scroll', onScroll, { passive: true });
+    if (document.querySelector('.site-header')) window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
   }
   configureMotion();
   motion.addEventListener?.('change', configureMotion);
