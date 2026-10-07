@@ -1,5 +1,13 @@
 # Memória — Caffè Camillo Colombi
 
+## Estado atual — 06/10/2026
+
+Correção do cabeçalho no commit `8a331f3`, revisão [PR #6](https://github.com/marcoszhp/camillo-colombi-/pull/6). Publicada na Cloudflare na versão `1d006708-366f-4a81-9819-2c25ef7c0570`, sem alteração no banco.
+
+A correção anterior do listener de rolagem não resolveu o posicionamento. Reprodução online: em `scrollY=720`, o estado era `scrolling-up` e o transform estava zerado, mas o cabeçalho permanecia em `top=-720`. O sticky estava limitado ao wrapper da mesma altura. Agora `[data-header]` recebe sticky/top/z-index e `.site-header` é relative; a transição continua no elemento interno.
+
+Validação real após publicação: desktop 1280×720, home — escondido ao descer, `top=0` ao subir em `scrollY=1873`; celular 390×844, `/nossa-historia` — escondido ao descer, `top=0` ao subir em `scrollY=356`, menu móvel visível ao abrir. Local também conferido na home e catálogo, incluindo navegação pelo menu e ausência de overflow no celular. `npm test` 28/28 e `npm run check` aprovados. Capturas em `cloudflare/reports/header-online-{desktop,mobile}.jpg` (ignoradas pelo Git). Detalhes em `docs/PROGRESSO_SITE.md`; cabeçalho sem pendências conhecidas após estes testes.
+
 ## Estado em 05/10/2026
 
 Versão publicada em main no GitHub, commit de implementação `ae999fe`; desenvolvida na branch `codex/camillo-experiencia-cloudflare` a partir de `da543a3`. O código Node/MySQL da raiz é a base histórica e permanece preservado. A aplicação Cloudflare fica em `cloudflare/` e foi copiada do checkout existente em Downloads; sem dados privados, `node_modules` ou estado D1. O diretório raiz de build/deploy Cloudflare é `cloudflare/`.
