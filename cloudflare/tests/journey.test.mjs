@@ -28,7 +28,8 @@ function harness({ desktop = false, width = desktop ? 1280 : 390, height = 800, 
   }
   const stage = new Node(), control = new Node(), particles = new Node(), root = new Node();
   const videos = Array.from({ length: 4 }, (_, index) => {
-    const video = new Node(); video.paused = true; video.loads = video.plays = 0; video.seeks = []; video.time = 0; video.readyState = 0;
+    const video = new Node(); video.paused = true; video.loads = video.plays = 0; video.seeks = []; video.time = 0; video.readyState = 0; video.networkState = 0;
+    video.buffered = video.seekable = { length: 0 };
     video.pause = () => { video.paused = true; };
     video.load = () => { video.loads += 1; };
     video.play = () => { video.plays += 1; throw new Error('Scroll media must stay paused'); };
@@ -226,6 +227,45 @@ test('seeks coalesce to the latest scroll position and run backwards without pla
   h.video.finishSeek();
   assert.equal(h.video.dataset.scrubFrame, '1.000');
   assert.equal(h.video.dataset.scrubSeeking, 'false');
+});
+
+test('data availability resumes the latest metadata-era target while the poster stays visible until seeked', () => {
+  const h = harness({ desktop: true, vendors: true, media: true });
+  assert.equal(h.video.preload, 'none');
+  h.visible(true); h.progress(2.2 / 6);
+  assert.equal(h.video.preload, 'auto');
+  h.video.networkState = 2; h.video.metadata();
+  assert.equal(h.video.dataset.scrubReadyState, '1');
+  assert.equal(h.video.dataset.scrubNetworkState, '2');
+  assert.equal(h.video.dataset.scrubBufferedEnd, '0.000');
+  assert.equal(h.video.classList.contains('is-ready'), false);
+  h.progress(2.4 / 6); h.progress(2.8 / 6);
+  assert.equal(h.video.seeks.length, 1);
+
+  // The browser has metadata but did not complete its initial data-starved seek.
+  h.video.time = 0; h.video.seeking = false; h.video.readyState = 2;
+  h.video.buffered = { length: 1, end: () => 10 };
+  h.video.seekable = { length: 1, end: () => 10 };
+  h.video.dispatchEvent(new Event('loadeddata'));
+  assert.equal(h.video.seeks.length, 2);
+  assert.ok(Math.abs(h.video.currentTime - 8) < .00001);
+  assert.equal(h.video.dataset.scrubReadyState, '2');
+  assert.equal(h.video.dataset.scrubBufferedEnd, '10.000');
+  assert.equal(h.video.dataset.scrubSeekableEnd, '10.000');
+  assert.equal(h.video.classList.contains('is-ready'), false);
+  h.video.dispatchEvent(new Event('canplay')); h.video.dispatchEvent(new Event('progress'));
+  assert.equal(h.video.seeks.length, 2);
+  h.video.finishSeek();
+  assert.equal(h.video.classList.contains('is-ready'), true);
+  assert.equal(h.video.paused, true);
+  assert.equal(h.video.plays, 0);
+  h.control.dispatchEvent(new Event('click'));
+  assert.equal(h.video.preload, 'none');
+  assert.equal(h.video.dataset.scrubReadyState, undefined);
+  const seeks = h.video.seeks.length;
+  h.video.dispatchEvent(new Event('loadeddata')); h.video.dispatchEvent(new Event('canplay')); h.video.dispatchEvent(new Event('progress'));
+  assert.equal(h.video.seeks.length, seeks);
+  assert.equal(h.video.dataset.scrubBufferedEnd, undefined);
 });
 
 test('decoded-frame diagnostics report presented media time and cancel callbacks on teardown', () => {

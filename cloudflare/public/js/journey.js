@@ -68,11 +68,19 @@
       state.ready = false;
       if (state.frameCallback != null) video.cancelVideoFrameCallback?.(state.frameCallback);
       state.frameCallback = null;
-      ['scrubTarget', 'scrubFrame', 'scrubSeeking', 'scrubDuration'].forEach((key) => delete video.dataset[key]);
+      ['scrubTarget', 'scrubFrame', 'scrubSeeking', 'scrubDuration', 'scrubReadyState', 'scrubNetworkState', 'scrubBufferedEnd', 'scrubSeekableEnd'].forEach((key) => delete video.dataset[key]);
       video.pause();
+      video.preload = 'none';
       video.classList.remove('is-ready');
       if (video.hasAttribute('src')) { video.removeAttribute('src'); video.load(); }
     });
+  }
+  function reportMedia(state) {
+    const { video } = state;
+    video.dataset.scrubReadyState = String(video.readyState);
+    video.dataset.scrubNetworkState = String(video.networkState);
+    video.dataset.scrubBufferedEnd = (video.buffered?.length ? video.buffered.end(video.buffered.length - 1) : 0).toFixed(3);
+    video.dataset.scrubSeekableEnd = (video.seekable?.length ? video.seekable.end(video.seekable.length - 1) : 0).toFixed(3);
   }
   function activeScene() { return Math.min(scenes.length - 1, Math.floor(scenePosition)); }
   function seekMedia(state) {
@@ -99,6 +107,7 @@
       if (!available || state.failed) { video.classList.remove('is-ready'); return; }
       const near = index === active || (index === active + 1 && scenePosition - active > .8);
       if (near && !video.hasAttribute('src') && video.dataset.videoSrc) {
+        video.preload = 'auto';
         video.src = video.dataset.videoSrc;
         video.load();
       }
@@ -110,6 +119,11 @@
     media.forEach((state) => {
       const { video } = state;
       const valid = () => current === generation && eligible() && stageVisible && !document.hidden;
+      const resume = () => {
+        if (current !== generation || state.failed) return;
+        reportMedia(state);
+        if (valid()) updateMedia();
+      };
       state.handlers = {
         loadedmetadata: () => {
           if (current !== generation || state.failed) return;
@@ -117,10 +131,15 @@
             state.duration = video.duration;
             video.dataset.scrubDuration = state.duration.toFixed(3);
           }
+          reportMedia(state);
           updateMedia();
         },
+        loadeddata: resume,
+        canplay: resume,
+        progress: resume,
         seeked: () => {
           if (current !== generation || state.failed) return;
+          reportMedia(state);
           state.ready = video.readyState >= 2;
           video.dataset.scrubSeeking = String(video.seeking);
           if (state.ready) {
