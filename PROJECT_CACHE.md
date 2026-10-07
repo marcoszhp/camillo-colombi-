@@ -2,11 +2,21 @@
 
 ## Estado atual — 06/10/2026
 
+Home animada implementada na branch `codex/desktop-coffee-journey`, baseada em `origin/main` `b59386e`. Em revisão antes da publicação. Origem com grão realista gerado, torra com fundo/partículas/fumaça e transição para foto de Moka; catálogo e backend preservados. Desktop >=1024×640 usa GSAP/ScrollTrigger local; móvel e movimento reduzido usam fluxo estático. Controle explícito de movimento, tema escuro `#2a2621`, desmontagem e cabeçalho conferidos. `npm test` 33/33 e `npm run check` aprovados; revisão visual independente sem impedimentos. As três fotos da narrativa foram exportadas para WebP (387 KB no total). Detalhes/índice da entrega: `cloudflare/docs/ANIMACOES_DESKTOP.md`, `cloudflare/public/{index.html,css/journey.css,js/journey.js}`, `cloudflare/tests/journey.test.mjs` e `docs/PROGRESSO_SITE.md`.
+
+Pendência real: vídeo de Moka/Cappuccino sendo servido. Candidato Pexels licenciado não baixado; falhas de download/revisão registradas na documentação. Sem líquido falso em CSS; não chamar essa fase de animação final de preparo. Próximo passo imediato: publicar PR/Cloudflare e verificar o site online. Nenhuma migration ou alteração D1 nesta rodada. Catálogo atual continua com 8 produtos ativos; entrega somente MG/ES/RJ/SP, MG grátis e outros estados do Sudeste R$40.
+
 Correção do cabeçalho no commit `8a331f3`, revisão [PR #6](https://github.com/marcoszhp/camillo-colombi-/pull/6). Publicada na Cloudflare na versão `1d006708-366f-4a81-9819-2c25ef7c0570`, sem alteração no banco.
 
 A correção anterior do listener de rolagem não resolveu o posicionamento. Reprodução online: em `scrollY=720`, o estado era `scrolling-up` e o transform estava zerado, mas o cabeçalho permanecia em `top=-720`. O sticky estava limitado ao wrapper da mesma altura. Agora `[data-header]` recebe sticky/top/z-index e `.site-header` é relative; a transição continua no elemento interno.
 
 Validação real após publicação: desktop 1280×720, home — escondido ao descer, `top=0` ao subir em `scrollY=1873`; celular 390×844, `/nossa-historia` — escondido ao descer, `top=0` ao subir em `scrollY=356`, menu móvel visível ao abrir. Local também conferido na home e catálogo, incluindo navegação pelo menu e ausência de overflow no celular. `npm test` 28/28 e `npm run check` aprovados. Capturas em `cloudflare/reports/header-online-{desktop,mobile}.jpg` (ignoradas pelo Git). Detalhes em `docs/PROGRESSO_SITE.md`; cabeçalho sem pendências conhecidas após estes testes.
+
+## Referência de animações desktop — 06/10/2026
+
+Usuário pediu análise de viabilidade do Reels https://www.instagram.com/reel/DeDRa1-srk2/ e adaptação das animações para desktop. Vídeo público reproduzido no navegador, 9,59 s; análise visual por amostras em aproximadamente 0,17–9,30 s, intervalo de 1 s, sem análise de áudio. Evidências e timestamps em `cloudflare/reports/reel-analysis/evidence.json` e `observed-*.jpg` (ignorados pelo Git).
+
+Observado: grão grande no início; mudança de fundo claro para marrom, grãos separados/partículas e aparência de fumaça; preparo com porta-filtro e café caindo na xícara; catálogo ao final. Instagram mostra o rótulo “Conteúdo de IA”; o vídeo não comprova um site funcional nem qual tecnologia o produziu. Viabilidade: implementar uma narrativa desktop por rolagem com transições de texto/cor/imagens; realismo de líquidos exige mídia própria renderizada/filmada ou sequência de quadros. GSAP/ScrollTrigger suporta pin e scrub; documentação oficial consultada. Aplicação atual usa JS comum, sem necessidade de migrar para React. Preservar versão leve móvel, redução de movimento, cabeçalho corrigido e a preferência anterior de não exibir rótulos numerados. Esta análise serviu de base para a implementação descrita no estado atual; a etapa de vídeo real continua pendente.
 
 ## Estado em 05/10/2026
 
