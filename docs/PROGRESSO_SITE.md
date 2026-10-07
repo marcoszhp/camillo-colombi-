@@ -39,10 +39,10 @@ Atualização: 06/10/2026
 - ✅ Três fotos da experiência otimizadas: aproximadamente 7,1 MB → 387 KB.
 - ✅ Validação local: 33/33 testes, check aprovado e revisão visual independente sem impedimentos.
 - ⏳ Vídeo real de café sendo servido: download não concluído; preparo usa a foto realista de Moka. Não é a versão final da animação de líquido.
-- ⏳ Publicação desta rodada: aguardando deploy e conferência online.
+- ✅ Publicação desta rodada: Cloudflare versão `6f0aa440-045f-4955-a8c8-7e57628c2ef2`, revisão [PR #7](https://github.com/marcoszhp/camillo-colombi-/pull/7); desktop e celular conferidos online, sem erros de console na inspeção.
 
 Arquitetura, procedência das mídias, licenças e evidências em [Animações desktop](../cloudflare/docs/ANIMACOES_DESKTOP.md).
 
 ## Próximo passo
 
-Concluir publicação desta rodada; depois obter e validar a mídia de Moka/Cappuccino sendo servido para finalizar a etapa de líquido.
+Obter e validar a mídia de Moka/Cappuccino sendo servido para finalizar a etapa de líquido.

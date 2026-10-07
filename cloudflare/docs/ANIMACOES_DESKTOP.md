@@ -11,7 +11,7 @@
 - ✅ Controle “Ativar animação” / “Reduzir animação” no desktop. A configuração inicial respeita o sistema; a escolha explícita vale somente para esta página. Mudanças posteriores no sistema restauram a preferência do sistema.
 - ✅ Modo escuro mantém o fundo `#2a2621`, contraste do texto e tom quente de destaque.
 - ✅ Backend, autenticação, catálogo, pedidos, estoque, frete e banco não foram alterados.
-- ⏳ Publicação e verificação online: registrar após concluir o deploy.
+- ✅ Publicação Cloudflare: versão `6f0aa440-045f-4955-a8c8-7e57628c2ef2`, sem migrations, com implementação `d040097` e revisão [PR #7](https://github.com/marcoszhp/camillo-colombi-/pull/7).
 
 ## Representação e arquitetura
 
@@ -56,6 +56,8 @@ Candidato ao vídeo: [Mizuno K, Pexels 13737097](https://www.pexels.com/video/pe
 - ⏳ Não foi feita medição instrumentada de FPS ou Core Web Vitals; não há alegação de uma taxa de quadros garantida.
 
 Capturas locais em `reports/journey-{origin,roast,pour,dark}-desktop.jpg` e `reports/journey-mobile.jpg`, ignoradas pelo Git.
+
+Após o deploy, o [site público](https://caffe-camillo-colombi.marcos-hpg114.workers.dev/) foi conferido em 1280×720 e 390×844. Desktop: três cenas, uma fixação, cabeçalho em `top=0` ao subir em `scrollY=648`, acesso direto aos quatro produtos em destaque e console sem erros/avisos. A preferência de movimento reduzido deste navegador deixa a versão estática inicial; o botão explícito ativa a narrativa. Celular: zero fixações, zero cenas ocultas, zero vendors, vídeo sem URL e nenhum overflow horizontal. Evidências em `reports/journey-online-desktop.jpg` e `reports/journey-online-mobile.jpg`.
 
 ## Próxima mídia
 
