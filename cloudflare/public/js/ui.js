@@ -166,6 +166,10 @@
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
     art?.style.removeProperty('--shift');
+    if (document.querySelector('.site-header')) {
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
     if (motion.matches) return;
     if ('IntersectionObserver' in window) {
       observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
@@ -174,8 +178,6 @@
       document.documentElement.classList.add('motion-ready');
       document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
     }
-    if (document.querySelector('.site-header')) window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
   }
   configureMotion();
   motion.addEventListener?.('change', configureMotion);
