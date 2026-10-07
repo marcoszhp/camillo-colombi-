@@ -29,6 +29,20 @@ Atualização: 06/10/2026
 - ✅ Local: home e catálogo conferidos, navegação pelo menu móvel funcionando e sem overflow horizontal em 390 px.
 - ✅ Evidências locais: `cloudflare/reports/header-online-desktop.jpg` e `header-online-mobile.jpg` (arquivos ignorados pelo Git).
 
+## Animações desktop — rodada atual
+
+- ✅ Home com três cenas: origem, torra e preparo, seguida do catálogo real.
+- ✅ Grão realista com transparência; cor, texto, grãos menores e fumaça discreta acompanham a rolagem.
+- ✅ Celular e movimento reduzido preservam todos os blocos em fluxo normal.
+- ✅ Controle de movimento acessível pelo teclado e tema escuro com fundo `#2a2621`.
+- ✅ Cabeçalho reaparece durante a narrativa; acesso ao produto e confirmação do carrinho conferidos.
+- ✅ Três fotos da experiência otimizadas: aproximadamente 7,1 MB → 387 KB.
+- ✅ Validação local: 33/33 testes, check aprovado e revisão visual independente sem impedimentos.
+- ⏳ Vídeo real de café sendo servido: download não concluído; preparo usa a foto realista de Moka. Não é a versão final da animação de líquido.
+- ✅ Publicação desta rodada: Cloudflare versão `6f0aa440-045f-4955-a8c8-7e57628c2ef2`, revisão [PR #7](https://github.com/marcoszhp/camillo-colombi-/pull/7); desktop e celular conferidos online, sem erros de console na inspeção.
+
+Arquitetura, procedência das mídias, licenças e evidências em [Animações desktop](../cloudflare/docs/ANIMACOES_DESKTOP.md).
+
 ## Próximo passo
 
-A próxima rodada de animações deve usar os ganchos de movimento existentes e manter a redução de movimento do sistema.
+Obter e validar a mídia de Moka/Cappuccino sendo servido para finalizar a etapa de líquido.

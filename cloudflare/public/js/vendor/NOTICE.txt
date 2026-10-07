@@ -1,0 +1,6 @@
+GSAP and ScrollTrigger 3.15.0
+Copyright notices are preserved in each upstream minified file.
+Source: https://registry.npmjs.org/gsap/-/gsap-3.15.0.tgz
+License: GSAP Standard "No Charge" License
+https://gsap.com/community/standard-license/
+Retrieved 2026-10-06. Used to animate this website, not as a visual animation builder.

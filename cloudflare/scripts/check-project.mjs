@@ -51,7 +51,12 @@ for (const file of files) {
     }
   }
   const matches = [...text.matchAll(/https?:\/\/[^\s"')>]+/g)].map((m) => m[0]);
-  const realExternal = matches.filter((url) => !url.startsWith('http://www.w3.org/2000/svg'));
+  const vendor = path.relative(root, file).split(path.sep).join('/');
+  const gsapVendor = ['public/js/vendor/gsap.min.js', 'public/js/vendor/ScrollTrigger.min.js'].includes(vendor);
+  // Upstream copyright/license notices and the DOM namespace are identifiers,
+  // not remote dependencies. Keep the original notices in the vendored files.
+  const gsapMetadata = new Set(['https://gsap.com', 'https://gsap.com/standard-license.', 'http://www.w3.org/1999/xhtml']);
+  const realExternal = matches.filter((url) => !url.startsWith('http://www.w3.org/2000/svg') && !(gsapVendor && gsapMetadata.has(url)));
   if (realExternal.length) {
     console.error(`URL externa em ${path.relative(root,file)}: ${realExternal.join(', ')}`);
     errors += 1;
