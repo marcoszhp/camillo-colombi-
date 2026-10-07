@@ -36,7 +36,11 @@ function harness({ desktop = false, width = desktop ? 1280 : 390, height = 800, 
     Object.defineProperty(video, 'src', { set(value) { this.setAttribute('src', value); } });
     Object.defineProperty(video, 'currentTime', { get() { return this.time; }, set(value) { this.time = value; this.seeking = true; this.seeks.push(value); } });
     video.dataset.videoSrc = `/assets/journey/test-${index}.mp4`;
-    video.metadata = () => { video.duration = 10; video.readyState = 1; video.dispatchEvent(new Event('loadedmetadata')); };
+    video.metadata = ({ dataReady = true } = {}) => {
+      video.duration = 10; video.readyState = dataReady ? 2 : 1;
+      if (dataReady) video.buffered = video.seekable = { length: 1, end: () => 10 };
+      video.dispatchEvent(new Event('loadedmetadata'));
+    };
     video.finishSeek = () => { video.seeking = false; video.readyState = 2; video.dispatchEvent(new Event('seeked')); };
     return video;
   });
@@ -234,27 +238,29 @@ test('data availability resumes the latest metadata-era target while the poster 
   assert.equal(h.video.preload, 'none');
   h.visible(true); h.progress(2.2 / 6);
   assert.equal(h.video.preload, 'auto');
-  h.video.networkState = 2; h.video.metadata();
+  h.video.networkState = 2; h.video.metadata({ dataReady: false });
   assert.equal(h.video.dataset.scrubReadyState, '1');
   assert.equal(h.video.dataset.scrubNetworkState, '2');
   assert.equal(h.video.dataset.scrubBufferedEnd, '0.000');
   assert.equal(h.video.classList.contains('is-ready'), false);
   h.progress(2.4 / 6); h.progress(2.8 / 6);
-  assert.equal(h.video.seeks.length, 1);
+  assert.equal(h.video.seeks.length, 0);
 
-  // The browser has metadata but did not complete its initial data-starved seek.
+  // Even a buffered file is not safe to seek until the browser exposes its range.
   h.video.time = 0; h.video.seeking = false; h.video.readyState = 2;
   h.video.buffered = { length: 1, end: () => 10 };
-  h.video.seekable = { length: 1, end: () => 10 };
   h.video.dispatchEvent(new Event('loadeddata'));
-  assert.equal(h.video.seeks.length, 2);
+  assert.equal(h.video.seeks.length, 0);
+  h.video.seekable = { length: 1, end: () => 10 };
+  h.video.dispatchEvent(new Event('canplay'));
+  assert.equal(h.video.seeks.length, 1);
   assert.ok(Math.abs(h.video.currentTime - 8) < .00001);
   assert.equal(h.video.dataset.scrubReadyState, '2');
   assert.equal(h.video.dataset.scrubBufferedEnd, '10.000');
   assert.equal(h.video.dataset.scrubSeekableEnd, '10.000');
   assert.equal(h.video.classList.contains('is-ready'), false);
   h.video.dispatchEvent(new Event('canplay')); h.video.dispatchEvent(new Event('progress'));
-  assert.equal(h.video.seeks.length, 2);
+  assert.equal(h.video.seeks.length, 1);
   h.video.finishSeek();
   assert.equal(h.video.classList.contains('is-ready'), true);
   assert.equal(h.video.paused, true);

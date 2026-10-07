@@ -91,6 +91,9 @@
     // Inspect real media state through DOM attributes when browser tools mirror native properties.
     video.dataset.scrubTarget = target.toFixed(3);
     video.dataset.scrubSeeking = String(video.seeking);
+    // Metadata can arrive before a CDN response is seekable. An early seek can
+    // otherwise wait indefinitely when the host does not serve byte ranges.
+    if (video.readyState < 2 || !video.seekable.length || target > video.seekable.end(video.seekable.length - 1)) return;
     if (video.seeking) return;
     if (Math.abs(video.currentTime - target) > .035 || !state.ready) {
       try { video.currentTime = target; video.dataset.scrubSeeking = String(video.seeking); } catch (_) { state.failed = true; video.classList.remove('is-ready'); }
