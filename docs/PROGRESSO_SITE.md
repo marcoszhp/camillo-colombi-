@@ -1,19 +1,21 @@
 # Progresso do site
 
-Atualizado em 07/10/2026. Trabalho retomado; a jornada de seis fases segue em validação local e ainda não foi publicada.
+Atualizado em 07/10/2026. As seis fases estão publicadas na Cloudflare (versão `eceb1047-a978-4f47-93cd-5c7370b22161`, frontend `f6a4ccf`). O [PR #9](https://github.com/marcoszhp/camillo-colombi-/pull/9) foi integrado à main pelo merge `ff431d1560b6085dc685c23f6b6400a0945815ea`.
 
-## Jornada de preparo — validação local
+## Jornada de preparo — publicada
 
-- ✅ A jornada local tem seis fases: origem, torra, moagem, água no filtro, extração e servir na xícara.
-- ✅ Os quatro vídeos Mixkit e posters estão integrados à branch `codex/coffee-preparation-processes`.
+- ✅ A jornada publicada tem seis fases: origem, torra, moagem, água no filtro, extração e servir na xícara.
+- ✅ Os quatro vídeos Mixkit e posters estão integrados à versão publicada; o PR #9 contém a correção de seek da mídia.
 - ✅ Desktop: uma cena fixada, timeline ligada à rolagem com duração de 4,5 alturas da janela; elegibilidade a partir de 1024 px de largura, sem limite mínimo de altura.
 - ✅ Mídia pausada e posicionada com `currentTime` conforme o progresso da cena. O carregamento ocorre sob demanda para o vídeo ativo e o seguinte próximo da troca.
 - ✅ Celular: blocos estáticos e posters, sem download dos vídeos. Movimento reduzido inicia estático e sem download; no desktop, ativar explicitamente o controle de animação substitui a preferência para esta página.
-- ✅ `npm test`: 42/42; `npm run check`: aprovado.
-- ✅ Navegador real: avanço e reversão nas quatro mídias, com vídeos pausados. Tempos observados: moagem 4.087→2.628 s; água 6.387→3.959 s; extração 1.542→0.959 s; servir 6.866→4.292 s. Evidências em `cloudflare/reports/preparation-temporal.json` e `preparation-*.jpg`.
+- ✅ `npm test`: 43/43; `npm run check`: aprovado.
+- ✅ Produção em 1366×600: avanço e reversão nas quatro mídias, vídeos pausados (`paused=true`), uma fixação e console sem erros. Tempos observados: moagem 3.903→2.397 s; água 6.375→3.958 s; extração 1.542→0.959 s; servir 6.917→4.250 s. `readyState=4`; `seekable` e `buffered` cobriram o fim dos clips. Evidências em `cloudflare/reports/preparation-online-temporal.json` e `preparation-online-{grinding,water,extraction,serving}.jpg`.
+- ✅ Produção: fonte inicia em `preload="none"`; perto da fase, carregam apenas o vídeo ativo e o próximo. `loadeddata`, `canplay` e `progress` retomam o alvo mais recente. O seek aguarda `readyState >= 2` e cobertura do tempo alvo por `seekable`. Isso corrige o seek prematuro observado quando a resposta ao pedido HTTP Range era 200.
 - ✅ Layout: modo normal com uma fixação e cabeçalho no topo; compacto em 1280×480 com uma fixação e ações no limite inferior; movimento reduzido sem fixações, mídia oculta e sem endereço carregado. Em 390 px, sem overflow horizontal, fixação, `src` de vídeo ou vendors. BFCache corrigido e conferido.
 - ✅ Revisão visual independente: PASS nas seis fases, com captura de torra em `cloudflare/reports/preparation-roast.jpg`; texto e botões legíveis, imagens arredondadas e composição coerente até a xícara. Em mobile, DOM confirmou os seis blocos sem ocultação, overflow, `src` de vídeo ou vendors, e sem fixação. A captura disponível (`cloudflare/reports/preparation-mobile.jpg`) mostra somente a primeira vista, não todas as fases mobile.
-- ⏳ Preparar PR e publicar as seis fases, depois conferir a versão online. Nenhuma das seis fases foi publicada; deploy Worker/assets sem migrations e sem D1.
+- ✅ Mobile online em 390×844: seis blocos visíveis, sem overflow, fixação, `src` de vídeo ou vendors. Captura em `cloudflare/reports/preparation-online-mobile.jpg`.
+- ✅ PR #9 integrado à main; os dois checks do head `f6a4ccf` passaram (2/2). A entrega está concluída, sem migrations ou alterações no D1.
 
 A arquitetura, evidência e limites de representação estão em [Animações desktop](../cloudflare/docs/ANIMACOES_DESKTOP.md); origens, licença e dados dos exports estão em [Mídias de preparo](../cloudflare/docs/MIDIAS_PREPARO.md).
 

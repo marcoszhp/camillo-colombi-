@@ -31,4 +31,12 @@ A narrativa adapta os processos ao café filtrado. Não é uma réplica 3D do po
 
 As cenas são controladas pela rolagem no desktop, com poster no celular, no modo reduzido e em falhas. A inspeção de quadros confirma os processos filmados; o scrub real no site foi validado separadamente em avanço e reversão para as quatro mídias. Os vídeos permaneceram pausados. Evidências temporais e capturas estão em `reports/preparation-temporal.json` e `reports/preparation-*.jpg`.
 
-Na validação local de 07/10/2026, os tempos observados foram: moagem 4.087→2.628 s, água 6.387→3.959 s, extração 1.542→0.959 s e servir 6.866→4.292 s. A revisão visual independente passou nas seis fases; a captura da torra está em `reports/preparation-roast.jpg`. Em mobile, o DOM confirmou seis blocos sem ocultação, overflow, endereço de vídeo ou vendors e sem fixação; `reports/preparation-mobile.jpg` mostra somente a primeira vista.
+Na validação local anterior de 07/10/2026, os tempos observados foram: moagem 4.087→2.628 s, água 6.387→3.959 s, extração 1.542→0.959 s e servir 6.866→4.292 s. A revisão visual independente passou nas seis fases; a captura da torra está em `reports/preparation-roast.jpg`. Em mobile, o DOM confirmou seis blocos sem ocultação, overflow, endereço de vídeo ou vendors e sem fixação; `reports/preparation-mobile.jpg` mostra somente a primeira vista.
+
+## Validação da publicação — 07/10/2026
+
+As seis fases estão publicadas na Cloudflare na versão `eceb1047-a978-4f47-93cd-5c7370b22161`; frontend no commit `f6a4ccf`. O PR #9 foi integrado à main pelo merge `ff431d1560b6085dc685c23f6b6400a0945815ea`. Testes: 43/43; `npm run check` aprovado.
+
+Em produção, a 1366×600, os quatro vídeos avançaram e retrocederam mantendo `paused=true`, uma fixação e console sem erros. Tempos: moagem 3.903→2.397 s, água 6.375→3.958 s, extração 1.542→0.959 s e servir 6.917→4.250 s. `readyState=4`; `seekable` e `buffered` cobriram o fim dos clips. Mobile online a 390×844: seis blocos visíveis, sem overflow, fixação, `src` de vídeo ou vendors. Evidências em `reports/preparation-online-temporal.json`, `reports/preparation-online-{grinding,water,extraction,serving}.jpg` e `reports/preparation-online-mobile.jpg`.
+
+A correção de seek inicia a fonte com `preload="none"`; perto da fase, carrega sob demanda somente o vídeo ativo e o próximo. Eventos `loadeddata`, `canplay` e `progress` retomam o alvo mais recente. Antes de definir `currentTime`, aguarda `readyState >= 2` e um intervalo `seekable` que cubra o alvo. Isso corrige o seek prematuro observado em produção quando o pedido HTTP Range recebeu resposta 200. Backend, D1 e configuração não mudaram. PR #9 integrado à main; os dois checks do head `f6a4ccf` passaram (2/2). A entrega não tem pendências técnicas conhecidas.
