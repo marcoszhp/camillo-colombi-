@@ -7,7 +7,7 @@
 - ✅ Preparo: transição para uma foto realista de Moka; catálogo real aparece ao terminar a narrativa.
 - ⏳ Vídeo real de café sendo servido: não incluído. Esta cena ainda não é a animação final de líquido pedida na referência.
 - ✅ Cabeçalho preservado fora da cena fixada e visível ao rolar para cima.
-- ✅ Celular, telas baixas e movimento reduzido recebem três blocos legíveis em fluxo normal, sem fixação ou bibliotecas de animação.
+- ✅ Celular e movimento reduzido recebem três blocos legíveis em fluxo normal, sem fixação ou bibliotecas de animação. Desktop com janela baixa recebe composição compacta animada.
 - ✅ Controle “Ativar animação” / “Reduzir animação” no desktop. A configuração inicial respeita o sistema; a escolha explícita vale somente para esta página. Mudanças posteriores no sistema restauram a preferência do sistema.
 - ✅ Modo escuro mantém o fundo `#2a2621`, contraste do texto e tom quente de destaque.
 - ✅ Backend, autenticação, catálogo, pedidos, estoque, frete e banco não foram alterados.
@@ -19,7 +19,7 @@ Conteúdo e ações permanecem no HTML. Fotografias e um recorte do grão recebe
 
 Há uma única timeline, com `scrub` e uma única cena fixada. A rolagem nativa continua livre para avançar, voltar ou saltar. A duração é de 2,25 alturas da janela. O botão “Ver cafés” alcança o catálogo sem exigir percorrer a animação inteira. Cenas inativas ficam fora da navegação assistiva; ao desligar o movimento, todos os estados e a fixação são removidos.
 
-O movimento é elegível a partir de 1024 px de largura e 640 px de altura. Os vendors carregam sob demanda e falhas de carregamento deixam o conteúdo estático. O cabeçalho mantém seu wrapper sticky anterior, sem entrar em um ancestral transformado pela animação.
+O movimento é elegível a partir de 1024 px de largura, sem altura mínima. Abaixo de 640 px de altura, texto, arte e espaçamento se adaptam. Os vendors carregam sob demanda e falhas de carregamento deixam o conteúdo estático. O cabeçalho mantém seu wrapper sticky anterior, sem entrar em um ancestral transformado pela animação.
 
 O elemento de vídeo é opcional e não possui URL nesta entrega. Para a futura mídia local aprovada, adicionar `data-video-src` ao vídeo. O código usa `preload="none"`, só atribui a URL perto da fase de preparo, tenta reprodução silenciosa, pausa fora da cena/aba e remove o recurso ao desmontar. Falha de reprodução conserva a fotografia. É necessário validar o arquivo real antes de declarar essa etapa concluída.
 
@@ -62,3 +62,12 @@ Após o deploy, o [site público](https://caffe-camillo-colombi.marcos-hpg114.wo
 ## Próxima mídia
 
 Obter um vídeo local licenciado de Moka/Cappuccino sendo servido, exportar em resolução adequada à área visível, sem áudio, conferir peso e enquadramento, conectar `data-video-src` e validar carregamento, reprodução, pausa, falha e versão móvel no navegador. Somente então trocar ⏳ por ✅ na etapa de líquido.
+
+## Correção de visibilidade — 06/10/2026
+
+- ❌ A versão inicial exigia 640 px de altura útil e escondia também o controle abaixo desse limite. Reprodução online em 1366×600: imagem estática, zero fixações, botão com `display:none`.
+- ✅ Desktop agora depende somente da largura de 1024 px. Composição alta preservada; abaixo de 640 px a narrativa se ajusta à altura útil.
+- ✅ “Ativar animação” está mais visível na versão estática, com alvo de 44 px, foco e contraste nos dois temas.
+- ✅ `npm test` 34/34 e `npm run check` aprovados, incluindo desktop baixo, fronteira de largura e ativação explícita com movimento reduzido.
+- ✅ Local em 1366×600 e 1280×480: uma fixação, conteúdo e ações dentro da janela. Em 1280×480, cena de torra com texto terminando em 338 px e controle terminando em 451 px.
+- ⏳ Ampliação autorizada pelo usuário: completar preparo/filtragem até a xícara usando mídias reais, além das três fases iniciais. Pesquisa em andamento; ainda não confundir fonte baixada com mídia integrada/publicada.

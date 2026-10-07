@@ -5,7 +5,13 @@ import vm from 'node:vm';
 
 const source = fs.readFileSync(new URL('../public/js/journey.js', import.meta.url), 'utf8');
 
-function harness({ desktop = false, reduced = false, vendors = false, media = false } = {}) {
+function matchesViewport(query, width, height) {
+  const minWidth = query.match(/min-width:\s*(\d+)px/);
+  const minHeight = query.match(/min-height:\s*(\d+)px/);
+  return (!minWidth || width >= Number(minWidth[1])) && (!minHeight || height >= Number(minHeight[1]));
+}
+
+function harness({ desktop = false, width = desktop ? 1280 : 390, height = 800, reduced = false, vendors = false, media = false } = {}) {
   class Node extends EventTarget {
     constructor() {
       super(); this.attributes = new Map(); this.children = []; this.dataset = {}; this.style = {};
@@ -33,7 +39,11 @@ function harness({ desktop = false, reduced = false, vendors = false, media = fa
   const document = new Node(); document.head = new Node(); document.documentElement = new Node();
   document.querySelector = () => root; document.createElement = () => new Node();
   const desktopQuery = new Node(), reducedQuery = new Node(); desktopQuery.matches = desktop; reducedQuery.matches = reduced;
-  const window = new Node(); window.matchMedia = (query) => query.includes('reduced') ? reducedQuery : desktopQuery;
+  const window = new Node(); window.matchMedia = (query) => {
+    if (query.includes('reduced')) return reducedQuery;
+    desktopQuery.matches = matchesViewport(query, width, height);
+    return desktopQuery;
+  };
   window.IntersectionObserver = true;
   let reverts = 0, refreshes = 0, timelineOptions, observerCallback;
   const chain = { to() { return this; }, fromTo() { return this; }, progress() { return this.position || 0; } };
@@ -42,7 +52,7 @@ function harness({ desktop = false, reduced = false, vendors = false, media = fa
   if (vendors) { window.gsap = gsap; window.ScrollTrigger = ScrollTrigger; }
   const timers = new Map(); let timerId = 0;
   vm.runInNewContext(source, {
-    document, window, innerHeight: 800,
+    document, window, innerHeight: height,
     setTimeout(fn) { timers.set(++timerId, fn); return timerId; }, clearTimeout(id) { timers.delete(id); },
     getComputedStyle() { return { getPropertyValue: (key) => ({ '--journey-paper': '#f7f2e6', '--journey-ink': '#33271e', '--journey-roast': '#3c241b' })[key] }; },
     MutationObserver: class { observe() {} },
@@ -54,6 +64,28 @@ function harness({ desktop = false, reduced = false, vendors = false, media = fa
     progress(value) { chain.position = value; timelineOptions.onUpdate(); }, visible(value) { observerCallback([{ isIntersecting: value }]); }
   };
 }
+
+test('short desktop uses the animated story by width while narrower screens stay static', () => {
+  for (const [width, height] of [[1366, 600], [1280, 480], [1024, 480]]) {
+    const h = harness({ width, height, vendors: true });
+    assert.equal(h.root.classList.contains('journey-enhanced'), true);
+    assert.equal(h.refreshes, 1);
+    assert.equal(h.control.textContent, 'Reduzir animação');
+  }
+  const mobile = harness({ width: 1023, height: 480 });
+  mobile.control.dispatchEvent(new Event('click'));
+  assert.equal(mobile.document.head.children.length, 0);
+  assert.equal(mobile.root.classList.contains('journey-enhanced'), false);
+
+  const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+  const beanQueries = [...html.matchAll(/<source media="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(beanQueries.length, 2);
+  for (const query of beanQueries) {
+    assert.equal(matchesViewport(query, 1280, 480), true);
+    assert.equal(matchesViewport(query, 1023, 800), false);
+    assert.ok(query.includes('(prefers-reduced-motion: no-preference)'));
+  }
+});
 
 test('mobile and reduced motion keep every scene readable without vendor or video downloads', () => {
   for (const options of [{}, { desktop: true, reduced: true }]) {
@@ -98,7 +130,7 @@ test('desktop lifecycle hides inactive scenes and reverts once before repeated p
 });
 
 test('an explicit desktop opt-in overrides reduced motion and a runtime OS change restores the system default', async () => {
-  const h = harness({ desktop: true, reduced: true, media: true });
+  const h = harness({ width: 1280, height: 480, reduced: true, media: true });
   assert.equal(h.control.textContent, 'Ativar animação');
   assert.equal(h.document.head.children.length, 0);
   assert.equal(h.video.hasAttribute('src'), false);

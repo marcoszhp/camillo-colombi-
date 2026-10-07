@@ -7,7 +7,7 @@
   const control = root.querySelector('[data-journey-motion]');
   const video = root.querySelector('video');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const desktop = window.matchMedia('(min-width: 1024px) and (min-height: 640px)');
+  const desktop = window.matchMedia('(min-width: 1024px)');
   // null follows the system; a click overrides it for this page only.
   let motionOverride = null;
   let generation = 0;
@@ -121,7 +121,7 @@
       }
       root.classList.add('journey-enhanced');
       beanSources.forEach((source) => {
-        source.media = '(min-width: 1024px) and (min-height: 640px)';
+        source.media = '(min-width: 1024px)';
         updateBean(source);
       });
       const colors = getComputedStyle(root);
