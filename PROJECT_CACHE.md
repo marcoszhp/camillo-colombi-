@@ -8,7 +8,9 @@
 
 ✅ Assets locais substituídos após conferência:300WebPs,9.038.448bytes; SHA256/tamanhos conferidos. Backup da pasta anterior em `cloudflare/reports/blender-assets-before-v5/`. Exportador usa WebP quality82/method3 após benchmark: método3 levou0,112s e22.432bytes no frame25; método0 seria47.776bytes. Exportar em staging fora de `public` e só trocar após completar/validar. `reports/blender-final-audit-v5.json`. Checks e42/42testes passaram.
 
-⏳ Pergunta enviada ao usuário para confirmar avanço/reversão no navegador local após Ctrl+F5. A ferramenta de navegador havia recusado acesso; não contornar. Confirmação ainda pendente. Preparar PR como rascunho; não integrar/publicar antes dessa validação. Backend/D1 preservados. Estado Git será registrado após push/PR.
+✅ Implementação enviada ao GitHub: branch `codex/blender-coffee-journey`, commit `d4b8fa6a8bde49b6c397050864499b5d0ddc0db5`. Sem merge ou deploy. A tentativa de criar PR em rascunho retornou403 `Resource not accessible by integration`; nenhum PR criado. Não repetir sem mudança de permissão da integração. O push Git funcionou; isso não confirma permissão do conector para PR.
+
+⏳ Pergunta enviada ao usuário para confirmar avanço/reversão no navegador local após Ctrl+F5. A ferramenta de navegador havia recusado acesso; não contornar. Confirmação ainda pendente. Resolver acesso para PR e validação de navegador antes de integrar/publicar. Fonte, quadros e vídeo corrigidos já estão prontos; não repetir render. Backend/D1 preservados. Última etapa é publicação somente Worker/assets após resolver estes bloqueios.
 
 ## Revisão da prévia — 09/10/2026
 
