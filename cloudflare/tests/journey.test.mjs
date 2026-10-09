@@ -2,372 +2,187 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-
-const source = fs.readFileSync(new URL('../public/js/journey.js', import.meta.url), 'utf8');
-
-function matchesViewport(query, width, height) {
-  const minWidth = query.match(/min-width:\s*(\d+)px/);
-  const minHeight = query.match(/min-height:\s*(\d+)px/);
-  return (!minWidth || width >= Number(minWidth[1])) && (!minHeight || height >= Number(minHeight[1]));
-}
-
-function harness({ desktop = false, width = desktop ? 1280 : 390, height = 800, reduced = false, vendors = false, media = false } = {}) {
-  class Node extends EventTarget {
-    constructor() {
-      super(); this.attributes = new Map(); this.children = []; this.dataset = {}; this.style = {};
-      const classes = new Set();
-      this.classList = { add: (name) => classes.add(name), remove: (name) => classes.delete(name), contains: (name) => classes.has(name), toggle: (name, force) => force ? classes.add(name) : classes.delete(name) };
-    }
-    setAttribute(name, value) { this.attributes.set(name, value); }
-    removeAttribute(name) { this.attributes.delete(name); }
-    hasAttribute(name) { return this.attributes.has(name); }
-    appendChild(node) { this.children.push(node); }
-    replaceChildren() { this.children = []; }
-    remove() { this.removed = true; }
-    querySelector() { return new Node(); }
+import { JourneySequence, frameAt, phaseAt, frameURL } from '../public/js/journey-sequence.js';
+const source = fs.readFileSync(new URL('../public/js/journey.js', import.meta.url), 'utf8').replace(/^import[^\n]+\n/, '');
+class Node extends EventTarget {
+  constructor() {
+    super(); this.attributes = new Map(); this.children = []; this.dataset = {};
+    const classes = new Set();
+    this.classList = { add: (name) => classes.add(name), remove: (name) => classes.delete(name), contains: (name) => classes.has(name) };
   }
-  const stage = new Node(), control = new Node(), particles = new Node(), root = new Node();
-  const videos = Array.from({ length: 4 }, (_, index) => {
-    const video = new Node(); video.paused = true; video.loads = video.plays = 0; video.seeks = []; video.time = 0; video.readyState = 0; video.networkState = 0;
-    video.buffered = video.seekable = { length: 0 };
-    video.pause = () => { video.paused = true; };
-    video.load = () => { video.loads += 1; };
-    video.play = () => { video.plays += 1; throw new Error('Scroll media must stay paused'); };
-    Object.defineProperty(video, 'src', { set(value) { this.setAttribute('src', value); } });
-    Object.defineProperty(video, 'currentTime', { get() { return this.time; }, set(value) { this.time = value; this.seeking = true; this.seeks.push(value); } });
-    video.dataset.videoSrc = `/assets/journey/test-${index}.mp4`;
-    video.metadata = ({ dataReady = true } = {}) => {
-      video.duration = 10; video.readyState = dataReady ? 2 : 1;
-      if (dataReady) video.buffered = video.seekable = { length: 1, end: () => 10 };
-      video.dispatchEvent(new Event('loadedmetadata'));
-    };
-    video.finishSeek = () => { video.seeking = false; video.readyState = 2; video.dispatchEvent(new Event('seeked')); };
-    return video;
-  });
-  const video = videos[0];
-  const scenes = Array.from({ length: 6 }, (_, index) => {
-    const scene = new Node(); scene.querySelectorAll = () => media && index >= 2 ? [videos[index - 2]] : []; return scene;
-  });
-  root.querySelector = (selector) => ({ '[data-journey-stage]': stage, '[data-journey-motion]': control, '[data-journey-particles]': particles, video })[selector];
-  root.querySelectorAll = (selector) => selector === '[data-journey-scene]' ? scenes : [];
-  const document = new Node(); document.head = new Node(); document.documentElement = new Node();
-  document.querySelector = () => root; document.createElement = () => new Node();
-  const desktopQuery = new Node(), reducedQuery = new Node(); desktopQuery.matches = desktop; reducedQuery.matches = reduced;
-  const window = new Node(); window.matchMedia = (query) => {
-    if (query.includes('reduced')) return reducedQuery;
-    desktopQuery.matches = matchesViewport(query, width, height);
-    return desktopQuery;
-  };
+  setAttribute(name, value) { this.attributes.set(name, value); }
+  getAttribute(name) { return this.attributes.get(name) ?? null; }
+  removeAttribute(name) { this.attributes.delete(name); }
+  hasAttribute(name) { return this.attributes.has(name); }
+  appendChild(node) { this.children.push(node); }
+  remove() {}
+}
+function harness({ width = 1280, height = 600, reduced = false, vendors = true } = {}) {
+  const root = new Node(), stage = new Node(), canvas = new Node(), poster = new Node(), control = new Node();
+  const scenes = Array.from({ length: 6 }, () => new Node());
+  root.querySelector = (selector) => ({ '[data-journey-stage]': stage, '[data-journey-canvas]': canvas, '[data-journey-poster]': poster, '[data-journey-motion]': control })[selector];
+  root.querySelectorAll = (selector) => selector === 'img' ? [poster] : scenes;
+  const document = new Node(); document.head = new Node(); document.querySelector = () => root; document.createElement = () => new Node();
+  const desktop = new Node(), reduce = new Node(); desktop.matches = width >= 1024; reduce.matches = reduced;
+  const window = new Node(); window.matchMedia = (query) => query.includes('reduced') ? reduce : desktop;
   window.IntersectionObserver = true;
-  let reverts = 0, refreshes = 0, timelines = 0, timelineOptions, observerCallback;
-  const chain = { to() { return this; }, fromTo() { return this; }, progress() { return this.position || 0; } };
-  const gsap = { registerPlugin() {}, set() {}, timeline(options) { timelines += 1; timelineOptions = options; return chain; }, context(callback) { callback(); return { revert() { reverts += 1; } }; } };
-  const ScrollTrigger = { refresh() { refreshes += 1; } };
+  let options, visible, reverts = 0, players = [];
+  const chain = { progress: () => chain.position || 0, to() { return this; } };
+  const gsap = { registerPlugin() {}, set() {}, timeline(value) { options = value; return chain; }, context(callback) { callback(); return { revert() { reverts++; } }; } };
+  const ScrollTrigger = { refresh() {} };
   if (vendors) { window.gsap = gsap; window.ScrollTrigger = ScrollTrigger; }
-  const timers = new Map(); let timerId = 0;
-  vm.runInNewContext(source, {
-    document, window, innerHeight: height,
-    setTimeout(fn) { timers.set(++timerId, fn); return timerId; }, clearTimeout(id) { timers.delete(id); },
-    getComputedStyle() { return { getPropertyValue: (key) => ({ '--journey-paper': '#f7f2e6', '--journey-ink': '#33271e', '--journey-roast': '#3c241b' })[key] }; },
-    MutationObserver: class { observe() {} },
-    IntersectionObserver: class { constructor(callback) { observerCallback = callback; } observe() {} disconnect() {} }
-  });
-  const flush = async () => { await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); };
-  return { root, stage, scenes, particles, control, video, videos, document, window, gsap, ScrollTrigger, desktopQuery, reducedQuery, flush,
-    get reverts() { return reverts; }, get refreshes() { return refreshes; },
-    get timelines() { return timelines; }, get trigger() { return timelineOptions.scrollTrigger; },
-    progress(value) { chain.position = value; timelineOptions.onUpdate(); }, visible(value) { observerCallback([{ isIntersecting: value }]); }
-  };
+  class Player { constructor(_, options) { this.options = options; players.push(this); } request(frame) { this.frame = frame; } setActive(active) { this.active = active; } destroy() { this.destroyed = true; } }
+  vm.runInNewContext(source, { document, window, innerHeight: height, JourneySequence: Player, frameAt, phaseAt, setTimeout, clearTimeout,
+    IntersectionObserver: class { constructor(callback) { visible = callback; } observe() {} disconnect() {} } });
+  return { root, stage, scenes, control, document, window, desktop, reduce, gsap,
+    get trigger() { return options.scrollTrigger; }, get reverts() { return reverts; }, get player() { return players.at(-1); },
+    progress(value) { chain.position = value; options.onUpdate(); }, visible(value) { visible([{ isIntersecting: value }]); },
+    flush: async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); } };
 }
-
-test('short desktop uses the animated story by width while narrower screens stay static', () => {
-  for (const [width, height] of [[1366, 600], [1280, 480], [1024, 480]]) {
-    const h = harness({ width, height, vendors: true });
-    assert.equal(h.root.classList.contains('journey-enhanced'), true);
-    assert.equal(h.refreshes, 1);
-    assert.equal(h.control.textContent, 'Reduzir animação');
-    assert.equal(h.timelines, 1);
-    assert.equal(h.trigger.pin, h.stage);
-    assert.equal(h.trigger.end(), `+=${Math.round(height * 4.5)}`);
+test('deterministic mapping covers 300 frames and six equal phases', () => {
+  assert.equal(frameAt(-1), 1); assert.equal(frameAt(2), 300);
+  for (let frame = 1; frame <= 300; frame++) assert.equal(frameAt((frame - 1) / 299), frame);
+  assert.deepEqual([1, 50, 51, 100, 101, 150, 151, 200, 201, 250, 251, 300].map(phaseAt), [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
+  assert.equal(frameURL(1), '/assets/journey/blender/frame-0001.webp');
+});
+test('short desktop has one pin and one accessible phase in both directions', () => {
+  const h = harness({ width: 1024, height: 480 });
+  assert.ok(h.root.classList.contains('journey-enhanced')); assert.equal(h.trigger.pin, h.stage);
+  assert.equal(h.trigger.scrub, .2); assert.equal(h.trigger.end(), '+=2160');
+  for (const index of [0, 1, 2, 3, 4, 5, 4, 2, 0]) {
+    h.progress((index * 50 + 25) / 299);
+    h.scenes.forEach((scene, i) => { assert.equal(scene.inert, i !== index); assert.equal(scene.hasAttribute('aria-hidden'), i !== index); });
   }
-  const mobile = harness({ width: 1023, height: 480 });
-  mobile.control.dispatchEvent(new Event('click'));
-  assert.equal(mobile.document.head.children.length, 0);
-  assert.equal(mobile.root.classList.contains('journey-enhanced'), false);
-
+});
+test('mobile and reduced motion download no vendors and leave six phases readable', () => {
+  for (const settings of [{ width: 1023 }, { reduced: true }]) {
+    const h = harness({ ...settings, vendors: false });
+    assert.equal(h.document.head.children.length, 0); assert.equal(h.player, undefined);
+    assert.ok(h.scenes.every((scene) => !scene.inert)); assert.equal(h.control.attributes.get('aria-pressed'), 'false');
+  }
+});
+test('explicit desktop opt-in works; OS changes teardown and restore accessibility', () => {
+  const h = harness({ reduced: true }); h.control.dispatchEvent(new Event('click'));
+  assert.ok(h.root.classList.contains('journey-enhanced')); h.progress(.8); const player = h.player;
+  h.reduce.dispatchEvent(new Event('change')); assert.equal(player.destroyed, true); assert.equal(h.reverts, 1);
+  assert.ok(h.scenes.every((scene) => !scene.inert && !scene.hasAttribute('aria-hidden')));
+  h.reduce.matches = false; h.reduce.dispatchEvent(new Event('change')); assert.ok(h.root.classList.contains('journey-enhanced'));
+});
+test('late or failed vendor preserves static fallback', async () => {
+  const h = harness({ vendors: false }); const script = h.document.head.children[0];
+  h.reduce.matches = true; h.reduce.dispatchEvent(new Event('change')); h.window.gsap = h.gsap; script.onload(); await h.flush();
+  assert.equal(h.document.head.children.length, 1); assert.equal(h.player, undefined);
+  const failed = harness({ vendors: false }); failed.document.head.children[0].onerror(); await failed.flush();
+  assert.equal(failed.player, undefined); assert.ok(failed.scenes.every((scene) => !scene.inert));
+});
+test('visibility pauses work; BFCache releases and rebuilds player', () => {
+  const h = harness(); h.visible(true); assert.equal(h.player.active, true);
+  h.document.hidden = true; h.document.dispatchEvent(new Event('visibilitychange')); assert.equal(h.player.active, false);
+  h.document.hidden = false; h.visible(false); assert.equal(h.player.active, false);
+  const old = h.player; h.window.dispatchEvent(new Event('pagehide')); assert.equal(old.destroyed, true);
+  const event = new Event('pageshow'); event.persisted = true; h.window.dispatchEvent(event); assert.notEqual(h.player, old);
+});
+function sequenceHarness(options = {}) {
+  const canvas = new Node(), requests = [], draws = [], callbacks = new Map(); let id = 0, closed = 0;
+  canvas.getContext = () => ({ clearRect() {}, drawImage(bitmap) { draws.push(bitmap.frame); } });
+  const player = new JourneySequence(canvas, {
+    fetchImage(url, { signal }) { return new Promise((resolve, reject) => {
+      const request = { frame: Number(url.match(/frame-(\d+)/)[1]), signal, reject, resolve() { resolve({ ok: true, blob: async () => ({ frame: request.frame }) }); } };
+      requests.push(request); signal.addEventListener('abort', () => reject(new Error('Aborted')), { once: true });
+    }); },
+    decode: async (blob) => ({ width: 960, height: 840, frame: blob.frame, close() { closed++; } }),
+    raf(callback) { callbacks.set(++id, callback); return id; }, cancel(key) { callbacks.delete(key); }, ...options
+  });
+  return { canvas, player, requests, draws, callbacks, get closed() { return closed; },
+    flush: async () => { for (let i = 0; i < 16; i++) await Promise.resolve(); },
+    paint() { const ready = [...callbacks.values()]; callbacks.clear(); ready.forEach((callback) => callback()); } };
+}
+test('sequence loads four at most, cancels long jumps and never paints stale completion', async () => {
+  const h = sequenceHarness(); assert.equal(h.requests.length, 0); h.player.setActive(true);
+  assert.equal(h.requests.length, 4); assert.equal(h.requests[0].frame, 1);
+  h.player.request(250); assert.ok(h.requests.every((request) => request.signal.aborted));
+  await h.flush(); assert.equal(h.requests[4].frame, 250); assert.equal(h.player.pending.size, 4);
+  h.requests[4].resolve(); await h.flush(); h.paint(); assert.deepEqual(h.draws, [250]);
+  h.player.request(120); h.paint(); assert.deepEqual(h.draws, [250]); assert.equal(h.canvas.dataset.requestedFrame, '120');
+  h.player.destroy(); await h.flush();
+});
+test('bounded cache closes images without continually refetching, teardown cancels RAF and downloads', async () => {
+  const h = sequenceHarness(); h.player.request(100); h.player.setActive(true);
+  const complete = async () => {
+    for (let round = 0; round < 12; round++) {
+      h.requests.filter((request) => !request.done && !request.signal.aborted).forEach((request) => { request.done = true; request.resolve(); });
+      await h.flush(); assert.ok(h.player.cache.size <= 36); assert.ok(h.player.pending.size <= 4);
+    }
+  };
+  await complete(); assert.equal(h.player.cache.size, 36); assert.equal(h.player.pending.size, 0); assert.equal(h.requests.length, 36);
+  h.player.request(40); await complete(); assert.ok(h.closed > 0);
+  h.player.request(290); const before = h.closed; h.player.destroy();
+  assert.equal(h.callbacks.size, 0); assert.equal(h.player.cache.size, 0); assert.equal(h.closed, before + 36);
+  await h.flush(); assert.equal(h.player.pending.size, 0); h.paint(); assert.deepEqual(h.draws, []);
+});
+test('HTML preserves six static phases and catalogue links, with one decorative canvas and no video', () => {
   const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
-  const beanQueries = [...html.matchAll(/<source media="([^"]+)"/g)].map((match) => match[1]);
-  assert.equal(beanQueries.length, 2);
-  for (const query of beanQueries) {
-    assert.equal(matchesViewport(query, 1280, 480), true);
-    assert.equal(matchesViewport(query, 1023, 800), false);
-    assert.ok(query.includes('(prefers-reduced-motion: no-preference)'));
-  }
+  assert.equal([...html.matchAll(/data-journey-scene/g)].length, 6); assert.equal([...html.matchAll(/<canvas /g)].length, 1);
+  assert.match(html, /journey-sequence" aria-hidden="true"/); assert.doesNotMatch(html, /<video|autoplay|data-video-src/);
+  for (const label of ['origin', 'roast', 'grinding', 'water', 'extraction', 'serving']) assert.match(html, new RegExp(`id="journey-${label}-title"`));
+  assert.match(html, /href="#featured"/); assert.match(html, /href="\/nossa-historia"/);
 });
 
-test('mobile and reduced motion keep every scene readable without vendor or video downloads', () => {
-  for (const options of [{}, { desktop: true, reduced: true }]) {
-    const h = harness({ ...options, media: true });
-    assert.equal(h.document.head.children.length, 0);
-    assert.equal(h.root.classList.contains('journey-enhanced'), false);
-    assert.ok(h.scenes.every((scene) => !scene.inert && !scene.hasAttribute('aria-hidden')));
-    assert.ok(h.videos.every((video) => !video.hasAttribute('src')));
-  }
+
+test('missing image retains the poster and hiding then resuming restarts aborted downloads', async () => {
+  const h = sequenceHarness(); h.player.setActive(true); h.player.setActive(false);
+  await h.flush(); assert.equal(h.player.pending.size, 0); assert.equal(h.callbacks.size, 0);
+  h.player.setActive(true); assert.equal(h.requests[4].frame, 1);
+  h.player.failed.add(1); h.player.setActive(false); await h.flush(); h.player.setActive(true); h.paint();
+  assert.equal(h.canvas.classList.contains('is-ready'), false); assert.equal(h.canvas.dataset.drawnFrame, undefined);
+  assert.notEqual(h.requests.at(-1).frame, 1); h.player.destroy(); await h.flush();
+});
+test('bitmap finishing decode after teardown is closed and never enters cache', async () => {
+  const canvas = new Node(); const finishDecode = []; let closed = 0;
+  canvas.getContext = () => ({ clearRect() {}, drawImage() { assert.fail('Destroyed player cannot paint'); } });
+  const player = new JourneySequence(canvas, {
+    fetchImage: async () => ({ ok: true, blob: async () => ({}) }),
+    decode: () => new Promise((resolve) => { finishDecode.push(resolve); }), raf: () => 1, cancel() {}
+  });
+  player.request(300); player.failed.add(299); player.failed.add(298); player.failed.add(297);
+  player.setActive(true);
+  for (let i = 0; i < 8; i++) await Promise.resolve();
+  // Resolve all four decodes independently so the assertion covers their disposal.
+  player.destroy(); finishDecode.forEach((resolve) => resolve({ width: 960, height: 840, close() { closed++; } }));
+  for (let i = 0; i < 8; i++) await Promise.resolve();
+  assert.equal(closed, 4); assert.equal(player.cache.size, 0);
 });
 
-test('a delayed vendor response cannot start a pin after reduced motion is enabled', async () => {
-  const h = harness({ desktop: true });
-  const script = h.document.head.children[0];
-  assert.equal(script.src, '/js/vendor/gsap.min.js');
-  h.reducedQuery.matches = true; h.reducedQuery.dispatchEvent(new Event('change'));
-  h.window.gsap = h.gsap; script.onload(); await h.flush();
-  assert.equal(h.document.head.children.length, 1);
-  assert.equal(h.root.classList.contains('journey-enhanced'), false);
-  assert.equal(h.refreshes, 0);
-});
-
-test('all phases reveal one accessible scene in either scroll direction with one pin', () => {
-  const h = harness({ desktop: true, vendors: true, media: true });
-  for (const index of [0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0]) {
-    h.progress((index + .5) / 6);
-    h.scenes.forEach((scene, position) => {
-      assert.equal(scene.inert, position !== index);
-      assert.equal(scene.hasAttribute('aria-hidden'), position !== index);
-    });
-  }
-  assert.equal(h.timelines, 1);
-  assert.equal(h.reverts, 0);
-});
-
-test('failed animation vendor leaves all six static scenes and media fallbacks readable', async () => {
-  const h = harness({ desktop: true, media: true });
-  h.document.head.children[0].onerror(); await h.flush();
+test('failed requested frame restores all static phases and releases the pin', () => {
+  const h = harness(); h.visible(true); h.progress(.8);
+  const player = h.player; player.options.onFailure();
+  assert.equal(player.destroyed, true); assert.equal(h.reverts, 1);
   assert.equal(h.root.classList.contains('journey-enhanced'), false);
   assert.ok(h.scenes.every((scene) => !scene.inert && !scene.hasAttribute('aria-hidden')));
-  assert.ok(h.videos.every((video) => !video.hasAttribute('src')));
-  assert.equal(h.timelines, 0);
-});
-
-test('desktop lifecycle hides inactive scenes and reverts once before repeated preference changes', async () => {
-  const h = harness({ desktop: true, vendors: true });
-  assert.equal(h.root.classList.contains('journey-enhanced'), true);
-  assert.equal(h.particles.children.length, 6);
-  h.progress(.5);
-  assert.deepEqual(h.scenes.map((scene) => scene.inert), [true, true, true, false, true, true]);
-  h.reducedQuery.matches = true; h.reducedQuery.dispatchEvent(new Event('change'));
-  assert.equal(h.reverts, 1);
-  assert.equal(h.particles.children.length, 0);
-  assert.ok(h.scenes.every((scene) => !scene.inert && !scene.hasAttribute('aria-hidden')));
-  h.reducedQuery.dispatchEvent(new Event('change'));
-  assert.equal(h.reverts, 1);
-  h.reducedQuery.matches = false; h.reducedQuery.dispatchEvent(new Event('change'));
-  assert.equal(h.refreshes, 2);
-  h.control.dispatchEvent(new Event('click'));
-  assert.equal(h.reverts, 2);
-  assert.equal(h.root.classList.contains('journey-enhanced'), false);
   assert.equal(h.control.attributes.get('aria-pressed'), 'false');
-  await h.flush();
 });
 
-test('an explicit desktop opt-in overrides reduced motion and a runtime OS change restores the system default', async () => {
-  const h = harness({ width: 1280, height: 480, reduced: true, media: true });
-  assert.equal(h.control.textContent, 'Ativar animação');
-  assert.equal(h.document.head.children.length, 0);
-  assert.equal(h.video.hasAttribute('src'), false);
-  h.control.dispatchEvent(new Event('click'));
-  assert.equal(h.document.head.children[0].src, '/js/vendor/gsap.min.js');
-  h.window.gsap = h.gsap; h.document.head.children[0].onload(); await h.flush();
-  assert.equal(h.document.head.children[1].src, '/js/vendor/ScrollTrigger.min.js');
-  h.window.ScrollTrigger = h.ScrollTrigger; h.document.head.children[1].onload(); await h.flush();
-  assert.equal(h.root.classList.contains('journey-enhanced'), true);
-  assert.equal(h.control.textContent, 'Reduzir animação');
-  h.control.dispatchEvent(new Event('click'));
-  assert.equal(h.root.classList.contains('journey-enhanced'), false);
-  assert.equal(h.control.textContent, 'Ativar animação');
-  h.reducedQuery.matches = false; h.reducedQuery.dispatchEvent(new Event('change'));
-  assert.equal(h.root.classList.contains('journey-enhanced'), true);
-  h.reducedQuery.matches = true; h.reducedQuery.dispatchEvent(new Event('change'));
-  assert.equal(h.root.classList.contains('journey-enhanced'), false);
-  assert.equal(h.control.textContent, 'Ativar animação');
-  assert.equal(h.video.hasAttribute('src'), false);
+test('failed prefetch falls back only when requested; aborts do not report failure', async () => {
+  let failures = 0;
+  const h = sequenceHarness({ onFailure() { failures++; } }); h.player.setActive(true);
+  h.requests[1].reject(new Error('Missing')); await h.flush();
+  assert.equal(failures, 0); h.player.request(2); assert.equal(failures, 1);
+  h.player.destroy(); await h.flush(); assert.equal(failures, 1);
+  const requested = sequenceHarness({ onFailure() { failures++; } }); requested.player.setActive(true);
+  requested.requests[0].reject(new Error('Missing')); await requested.flush();
+  assert.equal(failures, 2); requested.player.destroy(); await requested.flush();
 });
 
-test('scroll media loads near its phase and keeps its poster until a decoded seek completes', () => {
-  const h = harness({ desktop: true, vendors: true, media: true });
-  h.progress(2.5 / 6);
-  assert.ok(h.videos.every((video) => !video.hasAttribute('src')));
-  h.progress(0); h.visible(true); h.progress(1.5 / 6);
-  assert.ok(h.videos.every((video) => !video.hasAttribute('src')));
-  h.progress(1.9 / 6);
-  assert.equal(h.video.hasAttribute('src'), true);
-  assert.equal(h.video.classList.contains('is-ready'), false);
-  h.progress(2.5 / 6); h.video.metadata();
-  assert.equal(h.video.currentTime, 5);
-  assert.equal(h.video.classList.contains('is-ready'), false);
-  h.video.finishSeek();
-  assert.equal(h.video.classList.contains('is-ready'), true);
-  assert.equal(h.video.plays, 0);
-  assert.equal(h.video.paused, true);
-});
-
-test('seeks coalesce to the latest scroll position and run backwards without playing', () => {
-  const h = harness({ desktop: true, vendors: true, media: true });
-  h.visible(true); h.progress(2.2 / 6); h.video.metadata();
-  assert.equal(h.video.seeks.length, 1);
-  h.progress(2.4 / 6); h.progress(2.8 / 6);
-  assert.equal(h.video.seeks.length, 1);
-  assert.equal(h.video.dataset.scrubTarget, '8.000');
-  assert.equal(h.video.dataset.scrubFrame, undefined);
-  assert.equal(h.video.dataset.scrubSeeking, 'true');
-  h.video.finishSeek();
-  assert.equal(h.video.seeks.length, 2);
-  assert.ok(Math.abs(h.video.currentTime - 8) < .00001);
-  h.video.finishSeek(); h.progress(2.1 / 6);
-  assert.equal(h.video.dataset.scrubFrame, '8.000');
-  assert.equal(h.video.dataset.scrubTarget, '1.000');
-  assert.ok(Math.abs(h.video.currentTime - 1) < .00001);
-  assert.ok(h.video.seeks.at(-1) < h.video.seeks.at(-2));
-  assert.equal(h.video.plays, 0);
-  h.video.finishSeek();
-  assert.equal(h.video.dataset.scrubFrame, '1.000');
-  assert.equal(h.video.dataset.scrubSeeking, 'false');
-});
-
-test('data availability resumes the latest metadata-era target while the poster stays visible until seeked', () => {
-  const h = harness({ desktop: true, vendors: true, media: true });
-  assert.equal(h.video.preload, 'none');
-  h.visible(true); h.progress(2.2 / 6);
-  assert.equal(h.video.preload, 'auto');
-  h.video.networkState = 2; h.video.metadata({ dataReady: false });
-  assert.equal(h.video.dataset.scrubReadyState, '1');
-  assert.equal(h.video.dataset.scrubNetworkState, '2');
-  assert.equal(h.video.dataset.scrubBufferedEnd, '0.000');
-  assert.equal(h.video.classList.contains('is-ready'), false);
-  h.progress(2.4 / 6); h.progress(2.8 / 6);
-  assert.equal(h.video.seeks.length, 0);
-
-  // Even a buffered file is not safe to seek until the browser exposes its range.
-  h.video.time = 0; h.video.seeking = false; h.video.readyState = 2;
-  h.video.buffered = { length: 1, end: () => 10 };
-  h.video.dispatchEvent(new Event('loadeddata'));
-  assert.equal(h.video.seeks.length, 0);
-  h.video.seekable = { length: 1, end: () => 10 };
-  h.video.dispatchEvent(new Event('canplay'));
-  assert.equal(h.video.seeks.length, 1);
-  assert.ok(Math.abs(h.video.currentTime - 8) < .00001);
-  assert.equal(h.video.dataset.scrubReadyState, '2');
-  assert.equal(h.video.dataset.scrubBufferedEnd, '10.000');
-  assert.equal(h.video.dataset.scrubSeekableEnd, '10.000');
-  assert.equal(h.video.classList.contains('is-ready'), false);
-  h.video.dispatchEvent(new Event('canplay')); h.video.dispatchEvent(new Event('progress'));
-  assert.equal(h.video.seeks.length, 1);
-  h.video.finishSeek();
-  assert.equal(h.video.classList.contains('is-ready'), true);
-  assert.equal(h.video.paused, true);
-  assert.equal(h.video.plays, 0);
-  h.control.dispatchEvent(new Event('click'));
-  assert.equal(h.video.preload, 'none');
-  assert.equal(h.video.dataset.scrubReadyState, undefined);
-  const seeks = h.video.seeks.length;
-  h.video.dispatchEvent(new Event('loadeddata')); h.video.dispatchEvent(new Event('canplay')); h.video.dispatchEvent(new Event('progress'));
-  assert.equal(h.video.seeks.length, seeks);
-  assert.equal(h.video.dataset.scrubBufferedEnd, undefined);
-});
-
-test('decoded-frame diagnostics report presented media time and cancel callbacks on teardown', () => {
-  const h = harness({ desktop: true, vendors: true, media: true });
-  let frameCallback, cancelled;
-  h.video.requestVideoFrameCallback = (callback) => { frameCallback = callback; return 41; };
-  h.video.cancelVideoFrameCallback = (id) => { cancelled = id; };
-  h.visible(true); h.progress(2.5 / 6); h.video.metadata(); h.video.finishSeek();
-  assert.equal(h.video.dataset.scrubDuration, '10.000');
-  frameCallback(0, { mediaTime: 4.958333 });
-  assert.equal(h.video.dataset.scrubFrame, '4.958');
-  h.progress(2.7 / 6); h.video.finishSeek();
-  h.control.dispatchEvent(new Event('click'));
-  assert.equal(cancelled, 41);
-  assert.equal(h.video.dataset.scrubFrame, undefined);
-  assert.equal(h.video.dataset.scrubTarget, undefined);
-  frameCallback(0, { mediaTime: 7 });
-  assert.equal(h.video.dataset.scrubFrame, undefined);
-});
-
-test('hidden and off-screen media stays paused; teardown removes source and event handlers', () => {
-  const h = harness({ desktop: true, vendors: true, media: true });
-  h.visible(true); h.progress(2.5 / 6); h.video.metadata(); h.video.finishSeek();
-  h.document.hidden = true; h.document.dispatchEvent(new Event('visibilitychange'));
-  assert.equal(h.video.classList.contains('is-ready'), false);
-  const seeks = h.video.seeks.length;
-  h.progress(2.8 / 6);
-  assert.equal(h.video.seeks.length, seeks);
-  h.document.hidden = false; h.document.dispatchEvent(new Event('visibilitychange'));
-  assert.equal(h.video.seeks.length, seeks + 1);
-  h.video.finishSeek();
-  h.visible(false);
-  assert.equal(h.video.paused, true);
-  assert.equal(h.video.classList.contains('is-ready'), false);
-  h.reducedQuery.matches = true; h.reducedQuery.dispatchEvent(new Event('change'));
-  assert.ok(h.videos.every((video) => !video.hasAttribute('src') && !video.classList.contains('is-ready')));
-  assert.equal(h.video.loads, 2);
-  const after = h.video.seeks.length;
-  h.video.metadata(); h.video.finishSeek();
-  assert.equal(h.video.seeks.length, after);
-});
-
-test('media errors keep the poster without repeated downloads across preference changes', () => {
-  const h = harness({ desktop: true, vendors: true, media: true });
-  h.visible(true); h.progress(2.5 / 6);
-  h.video.dispatchEvent(new Event('error'));
-  h.progress(2.7 / 6); h.visible(false); h.visible(true);
-  assert.equal(h.video.loads, 1);
-  assert.equal(h.video.classList.contains('is-ready'), false);
-  h.control.dispatchEvent(new Event('click')); h.control.dispatchEvent(new Event('click'));
-  h.visible(true); h.progress(2.5 / 6);
-  assert.equal(h.video.hasAttribute('src'), false);
-  assert.equal(h.video.loads, 2);
-  assert.equal(h.document.head.children.length, 0);
-  assert.equal(h.timelines - h.reverts, 1);
-});
-
-test('BFCache restoration rebuilds one pin and resumes paused media with a coherent control', () => {
-  const h = harness({ desktop: true, vendors: true, media: true });
-  h.visible(true); h.progress(2.5 / 6); h.video.metadata(); h.video.finishSeek();
-  h.window.dispatchEvent(new Event('pagehide'));
-  assert.equal(h.root.classList.contains('journey-enhanced'), false);
-  assert.equal(h.video.hasAttribute('src'), false);
-  assert.equal(h.timelines - h.reverts, 0);
-
-  const restored = new Event('pageshow');
-  Object.defineProperty(restored, 'persisted', { value: true });
-  h.window.dispatchEvent(restored);
-  assert.equal(h.root.classList.contains('journey-enhanced'), true);
-  assert.equal(h.control.textContent, 'Reduzir animação');
-  assert.equal(h.control.attributes.get('aria-pressed'), 'true');
-  assert.equal(h.timelines - h.reverts, 1);
-  h.visible(true); h.progress(2.5 / 6); h.video.metadata(); h.video.finishSeek();
-  assert.equal(h.video.hasAttribute('src'), true);
-  assert.equal(h.video.classList.contains('is-ready'), true);
-  assert.equal(h.video.paused, true);
-  assert.equal(h.video.plays, 0);
-
-  h.window.dispatchEvent(new Event('pageshow'));
-  assert.equal(h.timelines, 2);
-  h.control.dispatchEvent(new Event('click'));
-  assert.equal(h.root.classList.contains('journey-enhanced'), false);
-  assert.equal(h.control.textContent, 'Ativar animação');
-  assert.equal(h.control.attributes.get('aria-pressed'), 'false');
-  assert.equal(h.timelines - h.reverts, 0);
-  assert.equal(h.video.hasAttribute('src'), false);
-});
-
-test('all six phases have static content and four videos start without a source or autoplay', () => {
-  const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
-  assert.equal([...html.matchAll(/data-journey-scene/g)].length, 6);
-  const videos = [...html.matchAll(/<video\b([^>]+)>/g)].map((match) => match[1]);
-  assert.equal(videos.length, 4);
-  for (const attributes of videos) {
-    assert.match(attributes, /data-video-src="\/assets\/journey\//);
-    assert.match(attributes, /preload="none"/);
-    assert.doesNotMatch(attributes, /(?:^|\s)(?:src=|autoplay\b|loop\b|controls\b)/);
-  }
+test('phase jumps show the matching poster instead of stale canvas; reverse paints cached frame', async () => {
+  const h = sequenceHarness(); h.player.setActive(true); h.requests[0].resolve(); await h.flush(); h.paint();
+  assert.equal(h.canvas.classList.contains('is-ready'), true);
+  h.player.request(250); h.paint(); assert.equal(h.canvas.classList.contains('is-ready'), false);
+  h.player.request(1); h.paint(); assert.deepEqual(h.draws, [1, 1]);
+  assert.equal(h.canvas.classList.contains('is-ready'), true); h.player.destroy(); await h.flush();
+  const page = harness(); page.progress(.8);
+  const poster = page.root.querySelector('[data-journey-poster]');
+  assert.equal(poster.getAttribute('src'), '/assets/journey/blender/poster-extraction.webp');
+  poster.dispatchEvent(new Event('error')); assert.equal(poster.hidden, true);
+  page.progress(1); assert.equal(poster.hidden, false);
+  assert.equal(poster.getAttribute('src'), '/assets/journey/blender/poster-serving.webp');
 });
