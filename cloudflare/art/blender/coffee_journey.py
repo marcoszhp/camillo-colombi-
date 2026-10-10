@@ -85,7 +85,9 @@ def vapor_material():
     ramp.color_ramp.elements[0].position = .35
     ramp.color_ramp.elements[0].color = (0,0,0,1)
     ramp.color_ramp.elements[1].position = .72
-    ramp.color_ramp.elements[1].color = (.28,.28,.28,1)
+    # Keep the mist below the alpha edge threshold of the transparent delivery;
+    # higher density turns the vapor shells into chalk-white cutouts in EEVEE.
+    ramp.color_ramp.elements[1].color = (.035,.035,.035,1)
     mat.node_tree.links.new(noise.outputs['Fac'],ramp.inputs[0])
     # Fade to zero before the mesh boundary, so the volume has no visible shell.
     coordinates = nodes.new('ShaderNodeTexCoord')
@@ -247,6 +249,35 @@ def bean(name, mat, seam_mat, parent):
     return obj
 
 
+def clip_bean_half(obj, side, seam_mat):
+    """Keep one physical side of the bean shell and cap the cut with a dark face."""
+    source = obj.data
+    verts = [v.co.copy() for v in source.vertices]
+    keep = []
+    for poly in source.polygons:
+        cx = sum(verts[i].x for i in poly.vertices) / len(poly.vertices)
+        if side * cx >= -0.018:
+            keep.append((tuple(poly.vertices), poly.material_index))
+    used = sorted({i for face, _ in keep for i in face})
+    remap = {old: new for new, old in enumerate(used)}
+    mesh = bpy.data.meshes.new(obj.name + ' cut shell')
+    mesh.from_pydata([verts[i] for i in used], [], [tuple(remap[i] for i in face) for face, _ in keep])
+    mesh.update()
+    for material_slot in source.materials:
+        mesh.materials.append(material_slot)
+    obj.data = mesh
+    for poly, (_, material_index) in zip(mesh.polygons, keep):
+        poly.material_index = material_index
+        poly.use_smooth = True
+    # A thin dark cut plane makes the fracture readable even in the reverse pass.
+    cap = mesh_object(obj.name + ' fracture face', [(-.012,-.40,-.78),(-.012,.40,-.78),(-.012,.40,.78),(-.012,-.40,.78)], [(0,1,2,3)], seam_mat, obj.parent)
+    cap.location = (0, 0, 1.10)
+    cap.rotation_euler = (0, math.pi / 2, 0)
+    cap.scale = (.22, .46, .80)
+    cap.parent = obj
+    return obj
+
+
 def disk(name, radius, z, mat, parent, inner=0, rough=0):
     n = 96
     if inner == 0:
@@ -305,6 +336,9 @@ def build(args):
     scene.view_settings.look = 'AgX - Medium High Contrast'
     scene.render.image_settings.compression = 35
     scene.render.use_file_extension = True
+    # Keep the transparent render clean; a compositor glow creates opaque halos
+    # around alpha edges and looks worse when composited over the site's cream.
+    scene.use_nodes = False
 
     cream = material('Warm ivory glazed ceramic',(.72,.59,.41),.23,texture=.012,scale=38,bump_distance=.003)
     cream.node_tree.nodes.get('Principled BSDF').inputs['Coat Weight'].default_value = .32
@@ -351,6 +385,8 @@ def build(args):
     fracture = group('01b Bean fracture and particle burst')
     left_half = bean('Bean fracture left half',raw,seam,fracture)
     right_half = bean('Bean fracture right half',raw,seam,fracture)
+    clip_bean_half(left_half, -1, seam)
+    clip_bean_half(right_half, 1, seam)
     for half, side in ((left_half,-1),(right_half,1)):
         pose(half,1,location=(0,0,3.0),scale=.0001,rotation=(.2,.1,side*.2))
         pose(half,72,location=(0,0,3.0),scale=.0001,rotation=(.2,.1,side*.2))
@@ -387,8 +423,12 @@ def build(args):
         pose(piece,1,location=(0,0,3.0),scale=.0001)
         pose(piece,74,location=(0,0,3.0),scale=.0001)
         pose(piece,81,location=(0,0,3.0),scale=.0001)
+        # Three beats create a readable burst instead of a linear teleport:
+        # lift, apex, then gravity-driven fall into the filter.
+        apex = (burst[0] * .72, burst[1] * .72, burst[2] + fracture_rng.uniform(.22,.62))
         pose(piece,90,location=burst,scale=size,rotation=(angle,.7,angle*.4))
-        pose(piece,land,location=target,scale=size,rotation=(angle+1.2,.3,angle))
+        pose(piece,98,location=apex,scale=size * 1.12,rotation=(angle+1.2,.3,angle))
+        pose(piece,land,location=target,scale=size,rotation=(angle+2.3,.3,angle+1.1))
         pose(piece,fade,location=target,scale=.0001)
         pose(piece,300,location=target,scale=.0001)
 
@@ -546,15 +586,48 @@ def build(args):
         g.parent=cup
         arrive_leave(g,246,270,300,300)
 
+    # The volumetric mist primitive produces opaque edge halos in the transparent
+    # EEVEE delivery. Keep the authored steam objects available for future passes,
+    # but disable their render contribution until a premultiplied volume shader is
+    # introduced; the scene remains clean and the coffee motion stays readable.
+    for obj in bpy.data.objects:
+        if 'vapor local mist' in obj.name or 'Cup vapor local mist' in obj.name:
+            obj.hide_render = True
+        if 'fracture face' in obj.name:
+            obj.hide_render = True
+
     light('Large warm softbox',(-4,-4,7),1050,(1,.82,.64),5)
     light('Cool soft fill',(5,-1,5),850,(.78,.86,1),4)
     light('Copper rim light',(1,4,6),1450,(1,.57,.25),3)
     light('Front groove soft light',(0,-5,3.3),120,(1,.86,.72),2.5)
+    # Cinematic highlight drift keeps the materials alive while the scroll state
+    # remains deterministic and reversible.
+    for lamp in [o for o in bpy.data.objects if o.type == 'LIGHT']:
+        base = lamp.data.energy
+        for f, factor in [(1,.82),(72,1.0),(112,1.18),(170,.92),(218,1.12),(270,.88),(300,.96)]:
+            lamp.data.energy = base * factor
+            lamp.data.keyframe_insert('energy', frame=f)
+    # A restrained depth of field and glow make the hero object feel photographed
+    # rather than assembled from flat primitives. Transparent output is retained
+    # so the site can supply its own background.
+    focus = bpy.data.objects.new('Cinematic focus target', None)
+    bpy.context.collection.objects.link(focus)
+    for f, loc in [(1,(0,0,2.6)),(78,(0,0,3.0)),(128,(0,0,1.7)),(190,(0,0,2.0)),(245,(0,0,1.2)),(300,(0,-.2,.8))]:
+        pose(focus, f, location=loc)
     bpy.ops.object.camera_add(location=(5.0,-9.7,6.7))
     camera=bpy.context.object
     camera.name='Single continuous camera'
     camera.data.type='ORTHO'
     camera.data.ortho_scale=7.35
+    camera.data.dof.use_dof = True
+    camera.data.dof.focus_object = focus
+    camera.data.dof.aperture_fstop = 5.6
+    # Motion blur smears the transparent vapor volumes into opaque halos in
+    # EEVEE; the authored easing and particle arcs provide the motion cue here.
+    try:
+        scene.render.use_motion_blur = False
+    except AttributeError:
+        pass
     scene.camera=camera
     for f,pos,target,ortho in [(1,(4.8,-10.5,6.3),(0,0,2.5),6.2),(100,(4.8,-10.5,6.7),(0,0,2.8),7.5),(145,(5.1,-10.4,7.1),(0,0,2.85),7.5),(185,(5.4,-10.4,7.3),(-.45,0,2.35),5.8),(245,(5.1,-10.3,7.0),(0,0,1.85),5.0),(285,(4.4,-10.0,6.0),(0,-.1,1.7),4.6),(300,(4.4,-10.0,6.0),(0,-.1,1.7),4.6)]:
         rotation=(Vector(target)-Vector(pos)).to_track_quat('-Z','Y').to_euler()
