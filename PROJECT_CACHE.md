@@ -1,5 +1,39 @@
 # Memória — Caffè Camillo Colombi
 
+## Correção do contexto das APIs do navegador — 10/10/2026
+
+✅ Novo diagnóstico do usuário: ready, vendors presentes, requestedFrame300, nenhum drawnFrame/cache, etapa0. Fora da seção, motionActive=false era esperado; não alterar IntersectionObserver por hipótese. Investigação identificou funções nativas guardadas diretamente no player e chamadas como `this.raf`/`this.fetchImage`/`this.decode`/`this.cancel`, passando o player como receptor em vez do global do navegador. Exceção ao agendar desenho interrompia também o restante de request/reveal; testes anteriores injetavam funções sem verificação de receptor.
+
+✅ Regressão independente com contrato de receptor global FALHOU antes em requestAnimationFrame e PASSOU depois. Qwen local gerou quatro wrappers em `cloudflare/public/js/journey-browser.js`; coordenador revisou/integrou como defaults em journey-sequence. Primeira tentativa Qwen foi recusada por não ler alvo antes de criar; segunda cumpriu a guarda e retornou SUCCESS. Prova funcional confirmou carregar/desenhar1→175→25, cancelar e preservar receiver nas4APIs. Suíte43/43 e check PASS. Evidências `reports/browser-receiver-{before,after,suite}.log`. Helpers gerados com Qwen100%GPU; modelo descarregado ao concluir.
+
+✅ Correção registrada no commit `22b6802` da branch `codex/blender-coffee-journey`. Índice e import do player usam versão20261010-receiver; diagnóstico informa build. Mantidos render/GSAP/IO/mobile/reduced motion/backend. Sem publicação Cloudflare nem merge.
+
+⏳ Pergunta pendente: recarregar prévia, ativar e verificar avanço/reversão. Teste do contrato nativo não substitui execução visual no navegador; não declarar aceite final até confirmação. Se necessário, novo diagnóstico deve mostrar build20261010-receiver. Resolver permissão para PR antes de integrar/publicar. Não repetir render ou verificações que já passaram sem mudança.
+
+## Falha de carregamento identificada — 10/10/2026
+
+❌ Retorno posterior ao reinício: usuário disse que continua parado. Servidor recebeu novas solicitações dos dois vendors e respondeu304, sem novo aviso de queda. Portanto, reiniciar o servidor NÃO confirmou resolução da falha. Solicitado texto completo do diagnóstico atualizado (pergunta livre, sem opção que omita o texto). Aguardar antes de atribuir causa a cache, políticas do navegador ou inicialização do player; não reiniciar repetidamente nem alterar biblioteca sem evidência.
+
+✅ Usuário forneceu diagnóstico real: viewport2035×1244, reducedMotion=true, documentHidden=false, initialization-error com `Animação indisponível`, gsap/ScrollTrigger ausentes, sem player/frames/triggers. Isso localiza a falha no carregamento das bibliotecas, antes da criação do player. Não atribuir ao Blender ou à largura.
+
+✅ Verificação HTTP dos vendors recusou conexão127.0.0.1:8787. Log anterior terminava com aviso de queda do runtime. Servidor local reiniciado (processo iniciador24132; logs `cloudflare/reports/preview-server-20261010*.log`). HEAD dos dois vendors e frame175 retornou200/MIME correto; GET dos vendors retornou200 e SHA256 idêntico aos arquivos locais. Evidência `cloudflare/reports/preview-vendor-health-20261010.json`. Nenhuma mudança no backend/dados/publicação. Essa conferência de entrega HTTP não é inspeção do navegador nem validação temporal.
+
+⏳ Solicitado recarregar Ctrl+F5, ativar animação (o sistema prefere movimento reduzido) e testar rolagem; aguardar novo resultado. A indisponibilidade do servidor foi corrigida, mas ainda não declarar o travamento resolvido no navegador. Se o diagnóstico continuar initialization-error com servidor saudável, investigar bloqueio de carregamento no navegador com evidência do usuário. Não repetir render. Próximo passo após validação real: PR/permissão da integração e publicação Worker/assets.
+
+## Travamento reportado no navegador — 09/10/2026
+
+❌ Usuário confirmou: página inicialmente estática; botão Ativar animação mostra um grão, porém rolar depois de ativar não avança. Logs da sessão registraram módulos e vendors, sem pedidos de frames. Causa ainda NÃO confirmada; não declarar corrigido, não publicar e não substituir a timeline por hipótese. A ferramenta de navegador continua sem acesso autorizado à prévia.
+
+✅ Diagnóstico opt-in em `http://127.0.0.1:8787/?diagnostico=animacao`. Após ativar/rolar, usuário pode clicar Copiar diagnóstico e colar na conversa. Não envia dados automaticamente, não coleta credenciais/URLs/conteúdo da página. `public/js/journey-diagnostics.js` lê somente estado da animação, geometria, preferências de movimento e progresso do ScrollTrigger. `journey.js` expõe estado/erro de inicialização em dataset; índice usa versão nova do módulo para evitar cache antigo. Nenhuma correção visual ou de rolagem alegada nesta etapa.
+
+✅ Qwen local gerou o módulo, mas sua validação sintática não detectou seletores incorretos. Coordenador corrigiu seletores, cópia e limpeza na revisão/integração. Oracle funcional independente `cloudflare/reports/verify-journey-diagnostics.mjs` PASS; suíte42/42 e check PASS em `reports/journey-diagnostic-tests.log`. Modelo descarregado, `ollama ps` vazio. Alterações locais ainda não commitadas. Próximo passo: interpretar diagnóstico compartilhado pelo usuário, reproduzir a causa, corrigir com regressão e validar navegador antes de PR/publicação. Não repetir render Blender.
+
+## Prévia local reaberta — 09/10/2026
+
+✅ Usuário informou que a página não abria. Diagnóstico confirmou ausência de servidor na porta8787. Wrangler reiniciado em segundo plano, modo local: registro `cloudflare/reports/preview-server-20261009.log` confirmou `Ready on http://127.0.0.1:8787`; listener127.0.0.1:8787 confirmado, PID23324 nesta sessão. Processo iniciador29764. Nenhuma migration, seed ou publicação executada.
+
+⏳ Abrir a prévia no computador e conferir avanço/reversão por rolagem. Servidor pronto não comprova validação visual ou temporal no navegador; recusa anterior da ferramenta continua respeitada. PR ainda bloqueado pelo403 registrado abaixo; produção inalterada. Limites nesta retomada:3% da janela curta e63% da semanal usados, uso ordinário permitido.
+
 ## Preparação corrigida e assets atualizados — 09/10/2026
 
 ✅ Versão5: chegada de filtro/caneca no frame118 antes do pó; moinho elevado; suporte de cobre; distância de0,58unidade permite ver a extração. O fluxo aparece por espessura mantendo origem na saída. Câmera corrigida para comportar grão/moinho. Helper `cloudflare/art/blender/preparation_layout.py` gerado por Qwen local; coordenador integrou a fonte maior e revisou. Nenhum subagente remoto acionado.
