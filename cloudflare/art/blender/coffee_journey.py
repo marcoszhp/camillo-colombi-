@@ -334,7 +334,7 @@ def build(args):
     stage_ring = lathe('Copper inlay on stage',[(2.72,.027),(2.75,.027)],copper)
 
     hero = group('01 Origin bean — continuous hero')
-    bean('Hero bean with curved cleft',raw,seam,hero)
+    hero_shell = bean('Hero bean with curved cleft',raw,seam,hero)
     for f,loc,s,rot in [
         (1,(0,-.1,2.5),1.8,(.15,-.23,-.3)),
         (45,(0,0,2.65),1.8,(.02,.2,.17)),
@@ -344,6 +344,53 @@ def build(args):
         (132,(0,0,4.65),.0001,(.5,.8,1.0)),
         (300,(0,0,4.65),.0001,(.5,.8,1.0))]:
         pose(hero,f,loc,s,rot)
+
+    # The hero cracks open before the grinder arrives. Two roasted halves pull
+    # apart with a dark fracture face, while a burst of visible grounds leaves
+    # the bean; eight larger pieces follow ballistic paths into the filter.
+    fracture = group('01b Bean fracture and particle burst')
+    left_half = bean('Bean fracture left half',raw,seam,fracture)
+    right_half = bean('Bean fracture right half',raw,seam,fracture)
+    for half, side in ((left_half,-1),(right_half,1)):
+        pose(half,1,location=(0,0,3.0),scale=.0001,rotation=(.2,.1,side*.2))
+        pose(half,72,location=(0,0,3.0),scale=.0001,rotation=(.2,.1,side*.2))
+        pose(half,78,location=(side*.05,0,3.0),scale=(.52,.72,.72),rotation=(.2,.1,side*.2))
+        pose(half,91,location=(side*.37,.02,3.12),scale=(.52,.72,.72),rotation=(.2,side*.6,side*.45))
+        pose(half,111,location=(side*.60,.08,3.20),scale=(.50,.70,.70),rotation=(.3,side*1.0,side*.75))
+        pose(half,128,location=(side*.60,.08,3.20),scale=.0001,rotation=(.3,side*1.0,side*.75))
+        pose(half,300,location=(side*.60,.08,3.20),scale=.0001,rotation=(.3,side*1.0,side*.75))
+    pose(hero,72,scale=1.8,location=(0,0,2.65))
+    pose(hero,78,scale=.0001,location=(0,0,2.65))
+    pose(hero,300,scale=.0001,location=(0,0,2.65))
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1,radius=1)
+    fracture_proto = bpy.context.object
+    fracture_mesh = fracture_proto.data
+    fracture_mesh.materials.append(grounds)
+    bpy.data.objects.remove(fracture_proto,do_unlink=True)
+    fracture_rng = random.Random(9041)
+    for i in range(30):
+        piece = bpy.data.objects.new('Fractured bean particle %02d' % i, fracture_mesh)
+        bpy.context.collection.objects.link(piece)
+        angle = fracture_rng.uniform(0, math.tau)
+        if i < 8:
+            radius = math.sqrt(fracture_rng.random()) * .34
+            burst = (fracture_rng.uniform(-1.25,1.25), fracture_rng.uniform(-.38,.65), fracture_rng.uniform(2.55,3.75))
+            target = (radius*math.cos(angle), radius*math.sin(angle), DRIPPER_Z+.54)
+            land = 112 + i*2
+            fade = land + 18
+        else:
+            burst = (fracture_rng.uniform(-2.4,2.4), fracture_rng.uniform(-.85,1.1), fracture_rng.uniform(2.1,4.2))
+            target = (burst[0]*1.16, burst[1]*1.12, burst[2]-.8)
+            land = 106 + i
+            fade = 124 + i//2
+        size = fracture_rng.uniform(.025,.065) if i < 8 else fracture_rng.uniform(.014,.040)
+        pose(piece,1,location=(0,0,3.0),scale=.0001)
+        pose(piece,74,location=(0,0,3.0),scale=.0001)
+        pose(piece,81,location=(0,0,3.0),scale=.0001)
+        pose(piece,90,location=burst,scale=size,rotation=(angle,.7,angle*.4))
+        pose(piece,land,location=target,scale=size,rotation=(angle+1.2,.3,angle))
+        pose(piece,fade,location=target,scale=.0001)
+        pose(piece,300,location=target,scale=.0001)
 
     roaster = group('02 Roasting copper pan')
     lathe('Open shallow copper roasting vessel',[(.09,0),(.8,0),(1.45,.12),(1.73,.40),(1.80,.56),(1.78,.61),(1.73,.61),(1.68,.43),(1.43,.18),(.8,.075),(.09,.075)],copper,roaster)

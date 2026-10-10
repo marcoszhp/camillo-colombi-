@@ -2,6 +2,8 @@
 
 ## Correção do contexto das APIs do navegador — 10/10/2026
 
+⏳ Retorno após correção trouxe JSON idêntico ao anterior, sem campo build. Isso não confirma execução da versão corrigida. Conferência HTTP dos4módulos (journey, sequence, diagnostics, browser) retornou200 e conteúdo exatamente igual ao disco. Orientado abrir URL nova `http://127.0.0.1:8787/?diagnostico=animacao&versao=20261010-receiver`; confirmar build20261010-receiver antes de nova análise. Não presumir que o Ctrl+F5 atualizou a aba nem alterar novamente o player sem diagnóstico da versão atual.
+
 ✅ Novo diagnóstico do usuário: ready, vendors presentes, requestedFrame300, nenhum drawnFrame/cache, etapa0. Fora da seção, motionActive=false era esperado; não alterar IntersectionObserver por hipótese. Investigação identificou funções nativas guardadas diretamente no player e chamadas como `this.raf`/`this.fetchImage`/`this.decode`/`this.cancel`, passando o player como receptor em vez do global do navegador. Exceção ao agendar desenho interrompia também o restante de request/reveal; testes anteriores injetavam funções sem verificação de receptor.
 
 ✅ Regressão independente com contrato de receptor global FALHOU antes em requestAnimationFrame e PASSOU depois. Qwen local gerou quatro wrappers em `cloudflare/public/js/journey-browser.js`; coordenador revisou/integrou como defaults em journey-sequence. Primeira tentativa Qwen foi recusada por não ler alvo antes de criar; segunda cumpriu a guarda e retornou SUCCESS. Prova funcional confirmou carregar/desenhar1→175→25, cancelar e preservar receiver nas4APIs. Suíte43/43 e check PASS. Evidências `reports/browser-receiver-{before,after,suite}.log`. Helpers gerados com Qwen100%GPU; modelo descarregado ao concluir.
