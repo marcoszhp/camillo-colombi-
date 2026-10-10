@@ -1,7 +1,12 @@
-import { JourneySequence, frameAt, phaseAt } from './journey-sequence.js';
+import { JourneySequence, frameAt, phaseAt } from './journey-sequence.js?v=20261010-receiver';
+
+if (typeof location !== 'undefined' && new URLSearchParams(location.search).get('diagnostico') === 'animacao') {
+  import('./journey-diagnostics.js').then(({ mountJourneyDiagnostics }) => mountJourneyDiagnostics());
+}
 
 const root = document.querySelector('[data-coffee-journey]');
 if (root) {
+  root.dataset.motionBuild = '20261010-receiver';
   const stage = root.querySelector('[data-journey-stage]');
   const canvas = root.querySelector('[data-journey-canvas]');
   const poster = root.querySelector('[data-journey-poster]');
@@ -46,10 +51,14 @@ if (root) {
     const src = `/assets/journey/blender/poster-${phases[index]}.webp`;
     if (poster.getAttribute('src') !== src) { poster.hidden = false; poster.setAttribute('src', src); }
   }
-  const updateActivity = () => player?.setActive(visible && !document.hidden);
+  const updateActivity = () => {
+    root.dataset.motionActive = String(visible && !document.hidden);
+    player?.setActive(visible && !document.hidden);
+  };
   function teardown() {
     generation += 1; clearTimeout(resizeTimer);
     observer?.disconnect(); observer = null; visible = false;
+    root.dataset.motionActive = 'false'; root.dataset.motionState = 'static';
     player?.destroy(); player = null;
     context?.revert(); context = timeline = null;
     root.classList.remove('journey-enhanced'); delete root.dataset.phase;
@@ -58,17 +67,24 @@ if (root) {
   }
   async function configure() {
     teardown(); updateControl();
-    if (!eligible()) return;
+    delete root.dataset.motionError;
+    if (!eligible()) {
+      root.dataset.motionState = !desktop.matches ? 'narrow-window' : reduce.matches && override === null ? 'reduced-motion' : 'paused';
+      return;
+    }
     const current = generation;
     try {
+      root.dataset.motionState = 'loading-engine';
       if (!window.gsap) await loadScript('/js/vendor/gsap.min.js');
       if (current !== generation || !eligible()) return;
       if (!window.ScrollTrigger) await loadScript('/js/vendor/ScrollTrigger.min.js');
       if (current !== generation || !eligible()) return;
       const gsap = window.gsap; gsap.registerPlugin(window.ScrollTrigger);
+      root.dataset.motionState = 'creating-player';
       player = new JourneySequence(canvas, { onFailure: () => {
         if (current !== generation) return;
         override = false; teardown(); updateControl();
+        root.dataset.motionState = 'media-unavailable';
       } });
       root.classList.add('journey-enhanced');
       context = gsap.context(() => {
@@ -100,7 +116,14 @@ if (root) {
         observer.observe(stage);
       } else { visible = true; updateActivity(); }
       window.ScrollTrigger.refresh();
-    } catch (_) { if (current === generation) teardown(); }
+      root.dataset.motionState = 'ready';
+    } catch (error) {
+      if (current === generation) {
+        teardown();
+        root.dataset.motionState = 'initialization-error';
+        root.dataset.motionError = String(error?.message || error).slice(0, 160);
+      }
+    }
   }
   control.addEventListener('click', () => { override = !eligible(); configure(); });
   reduce.addEventListener('change', () => { override = null; configure(); });

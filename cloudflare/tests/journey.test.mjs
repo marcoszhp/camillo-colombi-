@@ -45,6 +45,41 @@ test('deterministic mapping covers 300 frames and six equal phases', () => {
   assert.deepEqual([1, 50, 51, 100, 101, 150, 151, 200, 201, 250, 251, 300].map(phaseAt), [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
   assert.equal(frameURL(1), '/assets/journey/blender/frame-0001.webp');
 });
+
+test('default browser APIs retain their global receiver during load, draw, reverse and cancel', async () => {
+  const names = ['fetch', 'createImageBitmap', 'requestAnimationFrame', 'cancelAnimationFrame'];
+  const originals = names.map((name) => Object.getOwnPropertyDescriptor(globalThis, name));
+  const callbacks = new Map(), draws = [], calls = new Set(); let id = 0;
+  const implementations = {
+    fetch: async (url) => ({ ok: true, blob: async () => ({ frame: Number(url.match(/frame-(\d+)/)[1]) }) }),
+    createImageBitmap: async (blob) => ({ ...blob, width: 960, height: 840, close() {} }),
+    requestAnimationFrame: (callback) => { callbacks.set(++id, callback); return id; },
+    cancelAnimationFrame: (key) => callbacks.delete(key)
+  };
+  for (const name of names) Object.defineProperty(globalThis, name, { configurable: true, value: function (...args) {
+    assert.ok(this === globalThis, `${name}: illegal browser receiver`);
+    calls.add(name); return implementations[name](...args);
+  } });
+  const canvas = new Node(); canvas.getContext = () => ({ clearRect() {}, drawImage: (bitmap) => draws.push(bitmap.frame) });
+  let player;
+  try {
+    player = new JourneySequence(canvas); player.setActive(true);
+    const paint = async () => {
+      for (let i = 0; i < 100; i++) await Promise.resolve();
+      const ready = [...callbacks.values()]; callbacks.clear(); ready.forEach((callback) => callback());
+    };
+    await paint(); assert.equal(canvas.dataset.drawnFrame, '1');
+    player.request(175); await paint(); assert.equal(canvas.dataset.drawnFrame, '175');
+    player.request(25); await paint(); assert.equal(canvas.dataset.drawnFrame, '25');
+    player.request(26); player.setActive(false); assert.equal(callbacks.size, 0);
+    assert.deepEqual(draws, [1, 175, 25]); assert.equal(calls.size, 4);
+    player.destroy(); player = null;
+  } finally {
+    try { player?.destroy(); } finally {
+      names.forEach((name, i) => originals[i] ? Object.defineProperty(globalThis, name, originals[i]) : delete globalThis[name]);
+    }
+  }
+});
 test('short desktop has one pin and one accessible phase in both directions', () => {
   const h = harness({ width: 1024, height: 480 });
   assert.ok(h.root.classList.contains('journey-enhanced')); assert.equal(h.trigger.pin, h.stage);

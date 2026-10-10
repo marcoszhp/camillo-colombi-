@@ -1,3 +1,5 @@
+import { fetchFrame, decodeFrame, requestFrame, cancelFrame } from './journey-browser.js';
+
 export const FRAME_COUNT = 300;
 export const frameAt = (progress) => 1 + Math.round(Math.max(0, Math.min(1, Number(progress) || 0)) * (FRAME_COUNT - 1));
 export const phaseAt = (frame) => Math.min(5, Math.floor((frame - 1) / 50));
@@ -6,7 +8,7 @@ export const frameURL = (frame) => `/assets/journey/blender/frame-${String(frame
 // 36 decoded RGBA frames + four in flight: about 129 MB at 960 × 840.
 // No frame is fetched until the pinned stage is visible and the page is active.
 export class JourneySequence {
-  constructor(canvas, { fetchImage = fetch, decode = createImageBitmap, raf = requestAnimationFrame, cancel = cancelAnimationFrame, onFailure = () => {} } = {}) {
+  constructor(canvas, { fetchImage = fetchFrame, decode = decodeFrame, raf = requestFrame, cancel = cancelFrame, onFailure = () => {} } = {}) {
     this.canvas = canvas;
     this.context = canvas.getContext('2d');
     if (!this.context) throw new Error('Canvas indisponível');
