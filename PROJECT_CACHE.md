@@ -2,6 +2,8 @@
 
 ## Acabamento integrado e validado localmente - 12/10/2026
 
+✅ Implementacao enviada ao GitHub em12/10: commit a25d881 na branch codex/blender-coffee-journey. Push confirmado e main preservada. Solicitada decisao do usuario entre revisao visual independente pontual com Sol ou revisao pessoal; Qwen deste executor recebe apenas texto. Essa revisao ainda nao foi executada. Criacao de PR requer restabelecer acesso da integracao GitHub (installations=[]); nenhum PR/deploy criado.
+
 ✅ 300 WebPs e 6 posters exportados em quality86: 8.846.680 bytes, cerca de 9,9% menor que art-v2 (9.822.726). Conferidos decodificacao, RGBA, dimensoes960x840, ordem1..300, tamanhos, SHA256 e igualdade dos posters. Evidencia: `cloudflare/reports/studio-assets-audit.json`. Integrados em `cloudflare/public/assets/journey/blender`; backup em `reports/blender-assets-before-studio-20261012`. Nao repetir render ou exportacao.
 
 ✅ Navegador local1280x720: sem erro de console; movimento reduzido inicia estatico e ativacao explicita funciona. Scroll observado: frames67->121->174->227->280, reversao280->227->174, requested=drawn em todas as amostras. Seis fases e temas claro/escuro inspecionados. Celular390x844: seis etapas acessiveis, seis imagens carregadas960px, sem overflow (clientWidth=scrollWidth375), sem classe enhanced. Viewport restaurada. Revisao visual pelo coordenador; NAO alegar revisao visual independente.
