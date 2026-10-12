@@ -1,5 +1,17 @@
 # Jornada contínua criada no Blender
 
+## Acabamento integrado e validado localmente - 12/10/2026
+
+✅ 300 WebPs e 6 posters exportados em quality86: 8.846.680 bytes, cerca de 9,9% menor que art-v2 (9.822.726). Conferidos decodificacao, RGBA, dimensoes960x840, ordem1..300, tamanhos, SHA256 e igualdade dos posters. Evidencia: `cloudflare/reports/studio-assets-audit.json`. Integrados em `cloudflare/public/assets/journey/blender`; backup em `reports/blender-assets-before-studio-20261012`. Nao repetir render ou exportacao.
+
+✅ Navegador local1280x720: sem erro de console; movimento reduzido inicia estatico e ativacao explicita funciona. Scroll observado: frames67->121->174->227->280, reversao280->227->174, requested=drawn em todas as amostras. Seis fases e temas claro/escuro inspecionados. Celular390x844: seis etapas acessiveis, seis imagens carregadas960px, sem overflow (clientWidth=scrollWidth375), sem classe enhanced. Viewport restaurada. Revisao visual pelo coordenador; NAO alegar revisao visual independente.
+
+✅ Testes43/43 e check aprovados apos integrar (`cloudflare/reports/studio-final-tests.log`). Previa local reiniciada PID16236; logs `reports/studio-preview-server*.log`. Captura nova por CUA nao foi salva: gravacao recusada EPERM por ambiente somente leitura. Imagens foram inspecionadas na ferramenta; nao inventar arquivo de captura final. Captura de10/10 ainda mostra midia antiga.
+
+✅ Exportacao usou script existente. Delegacao Qwen `studio-asset-audit` falhou duas vezes por Unknown action or fields, sem criar arquivo. Modelo liberado; coordenador executou diretamente a pequena auditoria de integracao apos informar limitacao. Nao acionar outros modelos automaticamente. Relatorios no executor local em tasks/studio-asset-audit*-result.json.
+
+⏳ Publicacao continua pendente. Consulta GitHub list_installations retornou installations=[] em12/10; nao repetir criacao de PR sem restabelecimento de acesso. Backend, D1, migrations, seeds, autenticacao, carrinho, frete e estoque inalterados. Falta revisao visual independente e PR antes de integrar main/publicar Worker/assets. Limites recuperados:7%curta/3%semanal usados no inicio; nao houve compra nem reset manual.
+
 ## Correções da preparação — 09/10/2026, versão5
 
 ✅ Filtro e caneca posicionados antes da primeira partícula. Moinho elevado, partículas direcionadas ao leito de café, suporte de cobre e espaço de0,58unidade para leitura da extração. Fluxo de café não entra mais por deslocamento lateral: a origem permanece conectada à saída. Enquadramento corrigido.

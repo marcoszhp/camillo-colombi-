@@ -1,0 +1,100 @@
+.coffee-journey {
+  --journey-paper: #f6f3eb;
+  --journey-ink: #332c26;
+}
+
+.coffee-journey .journey-copy p {
+  line-height: 1.65;
+  max-width: 29ch;
+  opacity: 0.83;
+}
+
+.coffee-journey h1,
+.coffee-journey h2 {
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -.035em;
+}
+
+.coffee-journey em {
+  color: #792f2c;
+}
+
+.coffee-journey .btn-primary {
+  background: #702c29;
+  color: #fff9ed;
+  border-color: transparent;
+  border-radius: 999px;
+  min-height: 48px;
+  padding: .8rem 1.4rem;
+}
+
+.coffee-journey .btn-primary:hover {
+  background: #57221f;
+}
+
+.coffee-journey .journey-motion {
+  min-height: 44px;
+}
+
+@media (min-width: 1024px) {
+  .coffee-journey.journey-enhanced .journey-stage {
+    border-radius: 24px;
+    background: radial-gradient(ellipse at 77% 42%, #ece8dd, transparent 58%), #f6f3eb;
+  }
+
+  .coffee-journey.journey-enhanced .journey-sequence {
+    right: 1.5%;
+    top: 3%;
+    width: 58%;
+    height: 87%;
+  }
+
+  .coffee-journey.journey-enhanced .journey-copy {
+    max-width: 450px;
+  }
+
+  .coffee-journey.journey-enhanced .journey-copy h1,
+  .coffee-journey.journey-enhanced .journey-copy h2 {
+    font-size: clamp(3rem, 4.6vw, 5rem);
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 639px) {
+  .coffee-journey.journey-enhanced .journey-copy h1,
+  .coffee-journey.journey-enhanced .journey-copy h2 {
+    font-size: clamp(2.3rem, 7.6svh, 3.4rem);
+  }
+}
+
+[data-theme="dark"] .coffee-journey {
+  --journey-paper: #2a2621;
+  --journey-ink: #f6eee1;
+}
+
+[data-theme="dark"] .coffee-journey.journey-enhanced .journey-stage {
+  background: radial-gradient(ellipse at 77% 42%, #403a31, transparent 58%), #2a2621;
+}
+
+[data-theme="dark"] .coffee-journey .journey-copy em {
+  color: #e9bc9c;
+}
+
+[data-theme="dark"] .coffee-journey .btn-primary {
+  background: #ead9bd;
+  color: #31261f;
+}
+
+[data-theme="dark"] .coffee-journey .btn-primary:hover { background: #f5e7d0; }
+.coffee-journey.journey-enhanced .journey-stage:before { background: radial-gradient(ellipse at 70% 40%,rgba(85,49,31,.10),transparent 70%); }
+
+@media (max-width: 1023px) {
+  .coffee-journey .journey-art {
+    border-radius: 20px;
+    background: radial-gradient(ellipse, #eae4d7, transparent 70%);
+  }
+}
+
+[data-theme="dark"] .coffee-journey .journey-art {
+  background: radial-gradient(ellipse, #403a31, transparent 70%);
+}

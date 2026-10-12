@@ -14,6 +14,8 @@ from mathutils import Vector
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from preparation_layout import DRIPPER_Z, MILL_Z, add_stand
+from studio_finish import apply_studio_finish
+from studio_lighting import apply_studio_lighting
 
 
 def arguments():
@@ -674,6 +676,10 @@ def build(args):
     scene['project']='Caffè Camillo Colombi — continuous pour-over journey'
     scene['render_contract']='960x840 RGBA; 300 frames at 30fps; one scene/camera; independent frame rendering'
     scene['visual_style']='Warm editorial 3D; no claim of photorealistic reproduction'
+    apply_studio_finish(scene)
+    apply_studio_lighting(scene)
+    limestone = material('Studio limestone',(.60,.57,.49),.80,texture=.16,scale=38,bump_distance=.007)
+    bpy.data.objects['Ivory ceramic presentation surface'].data.materials[0] = limestone
     scene.frame_set(1)
     return scene
 
