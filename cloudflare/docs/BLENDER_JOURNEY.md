@@ -1,5 +1,11 @@
 # Jornada contínua criada no Blender
 
+## Revisão independente aprovada — 13/10/2026
+
+✅ Sol, autorizado pontualmente pelo usuário, inspecionou a prévia real do acabamento studio em `1e50e52`. Resultado: PASS visual delimitado, sem bloqueadores materiais. Conferidos seis processos desktop, rolagem e reversão, ativação explícita com movimento reduzido, temas e celular. Relatório: [STUDIO_VISUAL_REVIEW.md](STUDIO_VISUAL_REVIEW.md). Não afirmar cobertura individual dos300quadros, WCAG formal ou fotorealismo.
+
+✅ Gates técnicos preservados:43testes/check aprovados,300WebPs conferidos e geometria/câmera/movimentos do mestre aprovado preservados. Exportação/renderização concluídas; os blocos anteriores são históricos. Publicação Worker/assets aguarda PR/checks/merge e conferência online; sem migrations/seeds.
+
 ## Acabamento integrado e validado localmente - 12/10/2026
 
 ✅ 300 WebPs e 6 posters exportados em quality86: 8.846.680 bytes, cerca de 9,9% menor que art-v2 (9.822.726). Conferidos decodificacao, RGBA, dimensoes960x840, ordem1..300, tamanhos, SHA256 e igualdade dos posters. Evidencia: `cloudflare/reports/studio-assets-audit.json`. Integrados em `cloudflare/public/assets/journey/blender`; backup em `reports/blender-assets-before-studio-20261012`. Nao repetir render ou exportacao.

@@ -1,5 +1,15 @@
 # Memória — Caffè Camillo Colombi
 
+## Revisão e publicação em andamento — 13/10/2026
+
+✅ Revisão visual independente com Sol autorizada pelo usuário e concluída: `studio_review_final` PASS no escopo delimitado em `1e50e52`. Seis fases desktop claras; origem/moagem/extração/serviço escuros; rolagem e reversão; mobile390×844 seis fases escuras e extração/serviço claros,375/375 sem overflow. Sem bloqueadores materiais; não equivale a fotorealismo nem auditoria WCAG formal. Relatório versionado em `cloudflare/docs/STUDIO_VISUAL_REVIEW.md`. 300 quadros já exportados/integrados; não repetir render/exportação.
+
+✅ Prévia reiniciada em `http://127.0.0.1:8787` (processo iniciador26264; `cloudflare/reports/studio-preview-20261013*.log`). A tentativa restrita falhou por permissões do runtime; inicialização autorizada fora do sandbox confirmou Ready. Banco remoto não acessado.
+
+✅ Sessão existente do navegador autenticada no GitHub permite preparar o PR. O conector continua historicamente sem instalação, mas não houve nova tentativa pelo token recusado nem alteração de permissões. PR ainda não enviado. Cloudflare `whoami` válido; versão anterior para rollback: `eceb1047-a978-4f47-93cd-5c7370b22161`. Workflow GitHub executa somente check/test/deploy:dry. Publicar com Wrangler deploy direto; não usar o script de setup/migrations.
+
+⏳ Falta PR/checks/merge, deploy somente Worker/assets e conferência online. Consulta de limites indisponível nesta sessão; última leitura válida de12/10 tinha margem suficiente (26%curta/6%semanal usados). Nenhuma compra/reset. Backend, autenticação, carrinho, estoque, frete, configurações e D1 sem diferenças contra main.
+
 ## Acabamento integrado e validado localmente - 12/10/2026
 
 ✅ Implementacao enviada ao GitHub em12/10: commit a25d881 na branch codex/blender-coffee-journey. Push confirmado e main preservada. Solicitada decisao do usuario entre revisao visual independente pontual com Sol ou revisao pessoal; Qwen deste executor recebe apenas texto. Essa revisao ainda nao foi executada. Criacao de PR requer restabelecer acesso da integracao GitHub (installations=[]); nenhum PR/deploy criado.
