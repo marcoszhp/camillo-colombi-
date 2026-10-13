@@ -1,0 +1,68 @@
+{
+  "status": "PASS",
+  "forwardReverseFrames": 150,
+  "particles": 170,
+  "minimumExtractionGap": 0.5,
+  "cameraBounds": [
+    [
+      110,
+      "Hero bean with curved cleft",
+      0.6598,
+      0.9893
+    ],
+    [
+      110,
+      "Copper mill hopper",
+      0.682,
+      0.8444
+    ],
+    [
+      114,
+      "Hero bean with curved cleft",
+      0.7827,
+      0.9924
+    ],
+    [
+      114,
+      "Copper mill hopper",
+      0.6947,
+      0.8881
+    ],
+    [
+      118,
+      "Hero bean with curved cleft",
+      0.8107,
+      0.9274
+    ],
+    [
+      118,
+      "Copper mill hopper",
+      0.6965,
+      0.8984
+    ],
+    [
+      125,
+      "Hero bean with curved cleft",
+      0.7846,
+      0.8091
+    ],
+    [
+      125,
+      "Copper mill hopper",
+      0.6935,
+      0.8966
+    ],
+    [
+      138,
+      "Copper mill hopper",
+      0.6924,
+      0.8985
+    ],
+    [
+      145,
+      "Copper mill hopper",
+      0.6867,
+      0.8795
+    ]
+  ]
+}

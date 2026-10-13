@@ -1,5 +1,162 @@
 # Memória — Caffè Camillo Colombi
 
+## Revisão e publicação em andamento — 13/10/2026
+
+✅ Revisão visual independente com Sol autorizada pelo usuário e concluída: `studio_review_final` PASS no escopo delimitado em `1e50e52`. Seis fases desktop claras; origem/moagem/extração/serviço escuros; rolagem e reversão; mobile390×844 seis fases escuras e extração/serviço claros,375/375 sem overflow. Sem bloqueadores materiais; não equivale a fotorealismo nem auditoria WCAG formal. Relatório versionado em `cloudflare/docs/STUDIO_VISUAL_REVIEW.md`. 300 quadros já exportados/integrados; não repetir render/exportação.
+
+✅ Prévia reiniciada em `http://127.0.0.1:8787` (processo iniciador26264; `cloudflare/reports/studio-preview-20261013*.log`). A tentativa restrita falhou por permissões do runtime; inicialização autorizada fora do sandbox confirmou Ready. Banco remoto não acessado.
+
+✅ Sessão existente do navegador autenticada no GitHub permite preparar o PR. O conector continua historicamente sem instalação, mas não houve nova tentativa pelo token recusado nem alteração de permissões. PR ainda não enviado. Cloudflare `whoami` válido; versão anterior para rollback: `eceb1047-a978-4f47-93cd-5c7370b22161`. Workflow GitHub executa somente check/test/deploy:dry. Publicar com Wrangler deploy direto; não usar o script de setup/migrations.
+
+⏳ Falta PR/checks/merge, deploy somente Worker/assets e conferência online. Consulta de limites indisponível nesta sessão; última leitura válida de12/10 tinha margem suficiente (26%curta/6%semanal usados). Nenhuma compra/reset. Backend, autenticação, carrinho, estoque, frete, configurações e D1 sem diferenças contra main.
+
+## Acabamento integrado e validado localmente - 12/10/2026
+
+✅ Implementacao enviada ao GitHub em12/10: commit a25d881 na branch codex/blender-coffee-journey. Push confirmado e main preservada. Solicitada decisao do usuario entre revisao visual independente pontual com Sol ou revisao pessoal; Qwen deste executor recebe apenas texto. Essa revisao ainda nao foi executada. Criacao de PR requer restabelecer acesso da integracao GitHub (installations=[]); nenhum PR/deploy criado.
+
+✅ 300 WebPs e 6 posters exportados em quality86: 8.846.680 bytes, cerca de 9,9% menor que art-v2 (9.822.726). Conferidos decodificacao, RGBA, dimensoes960x840, ordem1..300, tamanhos, SHA256 e igualdade dos posters. Evidencia: `cloudflare/reports/studio-assets-audit.json`. Integrados em `cloudflare/public/assets/journey/blender`; backup em `reports/blender-assets-before-studio-20261012`. Nao repetir render ou exportacao.
+
+✅ Navegador local1280x720: sem erro de console; movimento reduzido inicia estatico e ativacao explicita funciona. Scroll observado: frames67->121->174->227->280, reversao280->227->174, requested=drawn em todas as amostras. Seis fases e temas claro/escuro inspecionados. Celular390x844: seis etapas acessiveis, seis imagens carregadas960px, sem overflow (clientWidth=scrollWidth375), sem classe enhanced. Viewport restaurada. Revisao visual pelo coordenador; NAO alegar revisao visual independente.
+
+✅ Testes43/43 e check aprovados apos integrar (`cloudflare/reports/studio-final-tests.log`). Previa local reiniciada PID16236; logs `reports/studio-preview-server*.log`. Captura nova por CUA nao foi salva: gravacao recusada EPERM por ambiente somente leitura. Imagens foram inspecionadas na ferramenta; nao inventar arquivo de captura final. Captura de10/10 ainda mostra midia antiga.
+
+✅ Exportacao usou script existente. Delegacao Qwen `studio-asset-audit` falhou duas vezes por Unknown action or fields, sem criar arquivo. Modelo liberado; coordenador executou diretamente a pequena auditoria de integracao apos informar limitacao. Nao acionar outros modelos automaticamente. Relatorios no executor local em tasks/studio-asset-audit*-result.json.
+
+⏳ Publicacao continua pendente. Consulta GitHub list_installations retornou installations=[] em12/10; nao repetir criacao de PR sem restabelecimento de acesso. Backend, D1, migrations, seeds, autenticacao, carrinho, frete e estoque inalterados. Falta revisao visual independente e PR antes de integrar main/publicar Worker/assets. Limites recuperados:7%curta/3%semanal usados no inicio; nao houve compra nem reset manual.
+
+## Render studio concluído — 11/10/2026
+
+✅ Conferência desta retomada: `cloudflare/reports/studio-full-render.log` termina com `STUDIO_FRAME 300` e `Blender quit`; pasta `reports/blender-sequence-studio/` contém300arquivosPNG. Render não foi reiniciado. Isso confirma término do lote e contagem; exportação, integridade individual e validação no navegador ainda não concluídas.
+
+⏳ Consulta de limites indisponível nas ferramentas atuais. Última leitura conhecida:95%semanal usado,5%restante em10/10. Não assumir recuperação da margem; próxima etapa pesada adiada até nova leitura confirmar margem. Nenhuma alteração de assets, código, banco ou publicação nesta retomada. Prosseguir com exportação/staging e validação conforme roteiro abaixo, preservando o modelo aprovado. Não renderizar novamente os300quadros sem falha comprovada.
+
+
+## Acabamento studio em execução — 10/10/2026, retomada
+
+✅ Qwen LOCAL executou de fato as tarefas `camillo-studio-materials`, `camillo-studio-lighting` e `camillo-journey-finish-css` (relatórios em `local-qwen-executor/tasks/`). Runner SUCCESS de sintaxe não bastou: coordenador corrigiu nomes exatos dos materiais, alvo do bump, animação no datablock de luz, socket Blender `Anisotropic`, seletores CSS e variáveis. Primeira tarefa maior falhou JSONDecodeError; divisão resolveu. Uma tarefa de iluminação iniciada prematuramente foi encerrada pelo PID17216 e só depois executada novamente; não deixar execuções duplicadas. Qwen descarregado antes do Blender. Sem executores remotos.
+
+✅ Arquivos novos `cloudflare/art/blender/studio_finish.py`, `studio_lighting.py`, `finish_approved_master.py` e `cloudflare/public/css/journey-finish.css`. Integração em `coffee_journey.py` e `public/index.html`. Novo acabamento: cerâmica mais clara, cobre menos alaranjado, iluminação neutra, reflexão EEVEE, pedestal fosco; fundo editorial neutro, botões vinho, espaçamento/tipografia e tema escuro#2a2621. Código ainda NÃO commitado. Assets públicos ainda são art-v2; só CSS novo já está na prévia.
+
+✅ Seis provas compostas sobre fundos reais: `cloudflare/reports/studio-comparison-{light,dark}.jpg`. Grão inicialmente brilhante demais: roughness ajustado para.62,coat.02,bump.30/.032; café roughness.26,coat.08,specular.2. Provas25/290 refeitas. Isso melhora acabamento, mas não equivale a fotografia nem gráficos perfeitos. Comparação e revisão feitas pelo coordenador; não alegar revisão visual independente nesta rodada.
+
+✅ Preservação exata: `reports/studio-preservation.json` PASS,314meshes,maxVertexDelta0; poses/câmera/curvas iguais em9quadros. Reconstrução pela fonte gerava ordem/topologia diferente em primitivas apesar de poses iguais; por isso o lote final aplica acabamento DIRETAMENTE ao mestre aprovado `reports/coffee-journey-art-v2.blend` via `art/blender/finish_approved_master.py`. Não enfraquecer teste nem reconstruir de novo. Mestre acabado `reports/coffee-journey-studio.blend`. Oracle `reports/verify-studio-preservation.py`.
+
+⏳ Render completo INICIADO: sessão exec71033, script `finish_approved_master.py -- --render`, saída `cloudflare/reports/blender-sequence-studio/`, log `reports/studio-full-render.log`. Última leitura mostrou frame24 em andamento; ainda não confirmar300. Próxima retomada verifica processo/log/contagem ANTES de iniciar qualquer lote. GPU já livre do Qwen. Render96samples,960×840,300quadros. Nenhuma exportação ou troca dos assets ainda.
+
+✅ Testes43/43 e check17arquivos passaram (`reports/studio-tests.log`). Layout desktop1440×900 revisto em navegador e captura `reports/studio-layout-desktop.png` (ainda mídia antiga); viewport restaurada. Estática com movimento reduzido permanece padrão, ativação explícita funciona. Validação temporal FINAL com novos assets, celular e tema escuro ainda pendentes. Prévia127.0.0.1:8787 segue disponível nesta sessão.
+
+✅ Cache da pasta superior corrigido: removido somente o bloco Caffè indevidamente inserido antes de `Base original` do FácilID. Cópia histórica em `cloudflare/reports/misplaced-camillo-cache-history.md`; não usar suas antigas afirmações causais sobre alpha como prova nova.
+
+⏳ Limites finais:70%curta/95%semanal usados,5%restante semanal. Adiar próximas etapas pesadas respeitando margem. Não comprar créditos/resets. Deixar render já iniciado terminar localmente. Próximos passos com margem: confirmar300PNG; exportar com `scripts/export-blender-frames.py --input reports/blender-sequence-studio --output reports/studio-webp-staging --quality86`; conferir hashes/tamanhos; backup e troca segura da pasta pública; browser avanço/reversão/mobile/temas; atualizar docs; commit/push; PR/publicação ainda dependem de resolver403anterior. Não repetir pedido de permissão GitHub sem mudança. Nenhum deploy, D1, migration,seed ou backend alterado.
+
+## Modelo aprovado; revisão de acabamento pendente — 10/10/2026
+
+✅ Pedido mais recente: o usuário aprovou o modelo e quer melhorar fortemente o design. Preservar geometria, objetos, keyframes, câmera e estrutura de300quadros. Concentrar a próxima etapa em materiais, textura, iluminação, sombras e integração visual com a página. Não refazer fratura/movimento por iniciativa própria nem prometer realismo perfeito.
+
+✅ Continuidade técnica: branch `codex/blender-coffee-journey`, commits `79dfe0a` (fratura/partículas) e `e3e09b5` (acabamento anterior), enviados ao GitHub. Mestre anterior `cloudflare/reports/coffee-journey-art-v2.blend`;300WebPs e6posters atuais,9.822.726bytes. Estes dados substituem a pendência histórica de confirmação do modelo abaixo; o usuário agora o aprovou. PR/publicação desta branch continuam pendentes: conector já retornou403, não repetir sem mudança de permissão.
+
+✅ Better Design consultado para orientação de imagem de produto e apresentação editorial. Manter identidade Camillo: marfim, vinho, títulos serifados, fundo escuro#2a2621. Direção: cerâmica clara menos amarela, cobre menos alaranjado, microtexturas legíveis no café, luz principal neutra suave, preenchimento discreto e contraste por sombras; mais espaço entre texto e objeto, botão vinho e superfície de apoio fosca. Não migrar a aplicação nem instalar dependências de interface por orientação genérica de ferramenta.
+
+⏳ Nenhuma alteração de código/arte desta rodada ainda aplicada. Próximo: delegar ao Qwen local dois módulos pequenos separadamente: `cloudflare/art/blender/studio_finish.py` (materiais/luzes) e `cloudflare/public/css/journey-finish.css` (acabamento da seção). Coordenador integra nos arquivos maiores e revisa. Contratos precisam caber nos limites do runner; ler alvo antes de criar, no máximo4000bytes por arquivo, sem redelegação. `local-qwen-executor/Invoke-Qwen.ps1` foi confirmado operacional com verificação elevada; sandbox isolado pode não localizar Ollama. Não alegar instalação ausente com base apenas nisso. Liberar Qwen antes de Blender.
+
+⏳ Renderizar primeiro6provas, comparar com baseline e compor RGBA sobre fundos reais antes da inspeção: halos em pixels transparentes não comprovam defeito no render. Confirmar que geometria e movimentos aprovados ficaram iguais. Só depois renderizar300quadros, exportar em staging, validar manifest/hashes e promover. Blender4.5.9 em `cloudflare/reports/blender-tools/blender-4.5.9-windows-x64/blender.exe`; Python/Node no runtime local. Fonte `cloudflare/art/blender/coffee_journey.py`; exportador `cloudflare/scripts/export-blender-frames.py`. Preservar resolução960×840 e contrato do player. Validar avanço/reversão, temas, celular e movimento reduzido no navegador, além de test/check. Não alterar backend/D1.
+
+⏳ Atenção documental: duas atualizações anteriores de Caffè foram gravadas por engano no `PROJECT_CACHE.md` da pasta superior (FácilID). Inspecionar apenas essas seções na retomada e transferir/remover somente o conteúdo de Caffè comprovado, preservando todo o restante. Usar sempre este caminho de projeto para continuidade.
+
+⏳ Etapa pesada adiada conforme margem do usuário: consulta final mostrou99% de uso na janela curta (1% restante),84% na semanal, uso ordinário permitido. Nenhum crédito/reset usado; nenhuma renderização ou tarefa Qwen iniciada nesta rodada. Automação de retomada permanece autorizada. Consultar limites novamente antes de executar; este pedido de acabamento aprovado prevalece sobre instruções históricas de redesenhar a sequência.
+
+## Correção do contexto das APIs do navegador — 10/10/2026
+
+⏳ Retorno após correção trouxe JSON idêntico ao anterior, sem campo build. Isso não confirma execução da versão corrigida. Conferência HTTP dos4módulos (journey, sequence, diagnostics, browser) retornou200 e conteúdo exatamente igual ao disco. Orientado abrir URL nova `http://127.0.0.1:8787/?diagnostico=animacao&versao=20261010-receiver`; confirmar build20261010-receiver antes de nova análise. Não presumir que o Ctrl+F5 atualizou a aba nem alterar novamente o player sem diagnóstico da versão atual.
+
+✅ Novo diagnóstico do usuário: ready, vendors presentes, requestedFrame300, nenhum drawnFrame/cache, etapa0. Fora da seção, motionActive=false era esperado; não alterar IntersectionObserver por hipótese. Investigação identificou funções nativas guardadas diretamente no player e chamadas como `this.raf`/`this.fetchImage`/`this.decode`/`this.cancel`, passando o player como receptor em vez do global do navegador. Exceção ao agendar desenho interrompia também o restante de request/reveal; testes anteriores injetavam funções sem verificação de receptor.
+
+✅ Regressão independente com contrato de receptor global FALHOU antes em requestAnimationFrame e PASSOU depois. Qwen local gerou quatro wrappers em `cloudflare/public/js/journey-browser.js`; coordenador revisou/integrou como defaults em journey-sequence. Primeira tentativa Qwen foi recusada por não ler alvo antes de criar; segunda cumpriu a guarda e retornou SUCCESS. Prova funcional confirmou carregar/desenhar1→175→25, cancelar e preservar receiver nas4APIs. Suíte43/43 e check PASS. Evidências `reports/browser-receiver-{before,after,suite}.log`. Helpers gerados com Qwen100%GPU; modelo descarregado ao concluir.
+
+✅ Correção registrada no commit `22b6802` da branch `codex/blender-coffee-journey`. Índice e import do player usam versão20261010-receiver; diagnóstico informa build. Mantidos render/GSAP/IO/mobile/reduced motion/backend. Sem publicação Cloudflare nem merge.
+
+⏳ Pergunta pendente: recarregar prévia, ativar e verificar avanço/reversão. Teste do contrato nativo não substitui execução visual no navegador; não declarar aceite final até confirmação. Se necessário, novo diagnóstico deve mostrar build20261010-receiver. Resolver permissão para PR antes de integrar/publicar. Não repetir render ou verificações que já passaram sem mudança.
+
+## Falha de carregamento identificada — 10/10/2026
+
+❌ Retorno posterior ao reinício: usuário disse que continua parado. Servidor recebeu novas solicitações dos dois vendors e respondeu304, sem novo aviso de queda. Portanto, reiniciar o servidor NÃO confirmou resolução da falha. Solicitado texto completo do diagnóstico atualizado (pergunta livre, sem opção que omita o texto). Aguardar antes de atribuir causa a cache, políticas do navegador ou inicialização do player; não reiniciar repetidamente nem alterar biblioteca sem evidência.
+
+✅ Usuário forneceu diagnóstico real: viewport2035×1244, reducedMotion=true, documentHidden=false, initialization-error com `Animação indisponível`, gsap/ScrollTrigger ausentes, sem player/frames/triggers. Isso localiza a falha no carregamento das bibliotecas, antes da criação do player. Não atribuir ao Blender ou à largura.
+
+✅ Verificação HTTP dos vendors recusou conexão127.0.0.1:8787. Log anterior terminava com aviso de queda do runtime. Servidor local reiniciado (processo iniciador24132; logs `cloudflare/reports/preview-server-20261010*.log`). HEAD dos dois vendors e frame175 retornou200/MIME correto; GET dos vendors retornou200 e SHA256 idêntico aos arquivos locais. Evidência `cloudflare/reports/preview-vendor-health-20261010.json`. Nenhuma mudança no backend/dados/publicação. Essa conferência de entrega HTTP não é inspeção do navegador nem validação temporal.
+
+⏳ Solicitado recarregar Ctrl+F5, ativar animação (o sistema prefere movimento reduzido) e testar rolagem; aguardar novo resultado. A indisponibilidade do servidor foi corrigida, mas ainda não declarar o travamento resolvido no navegador. Se o diagnóstico continuar initialization-error com servidor saudável, investigar bloqueio de carregamento no navegador com evidência do usuário. Não repetir render. Próximo passo após validação real: PR/permissão da integração e publicação Worker/assets.
+
+## Travamento reportado no navegador — 09/10/2026
+
+❌ Usuário confirmou: página inicialmente estática; botão Ativar animação mostra um grão, porém rolar depois de ativar não avança. Logs da sessão registraram módulos e vendors, sem pedidos de frames. Causa ainda NÃO confirmada; não declarar corrigido, não publicar e não substituir a timeline por hipótese. A ferramenta de navegador continua sem acesso autorizado à prévia.
+
+✅ Diagnóstico opt-in em `http://127.0.0.1:8787/?diagnostico=animacao`. Após ativar/rolar, usuário pode clicar Copiar diagnóstico e colar na conversa. Não envia dados automaticamente, não coleta credenciais/URLs/conteúdo da página. `public/js/journey-diagnostics.js` lê somente estado da animação, geometria, preferências de movimento e progresso do ScrollTrigger. `journey.js` expõe estado/erro de inicialização em dataset; índice usa versão nova do módulo para evitar cache antigo. Nenhuma correção visual ou de rolagem alegada nesta etapa.
+
+✅ Qwen local gerou o módulo, mas sua validação sintática não detectou seletores incorretos. Coordenador corrigiu seletores, cópia e limpeza na revisão/integração. Oracle funcional independente `cloudflare/reports/verify-journey-diagnostics.mjs` PASS; suíte42/42 e check PASS em `reports/journey-diagnostic-tests.log`. Modelo descarregado, `ollama ps` vazio. Alterações locais ainda não commitadas. Próximo passo: interpretar diagnóstico compartilhado pelo usuário, reproduzir a causa, corrigir com regressão e validar navegador antes de PR/publicação. Não repetir render Blender.
+
+## Prévia local reaberta — 09/10/2026
+
+✅ Usuário informou que a página não abria. Diagnóstico confirmou ausência de servidor na porta8787. Wrangler reiniciado em segundo plano, modo local: registro `cloudflare/reports/preview-server-20261009.log` confirmou `Ready on http://127.0.0.1:8787`; listener127.0.0.1:8787 confirmado, PID23324 nesta sessão. Processo iniciador29764. Nenhuma migration, seed ou publicação executada.
+
+⏳ Abrir a prévia no computador e conferir avanço/reversão por rolagem. Servidor pronto não comprova validação visual ou temporal no navegador; recusa anterior da ferramenta continua respeitada. PR ainda bloqueado pelo403 registrado abaixo; produção inalterada. Limites nesta retomada:3% da janela curta e63% da semanal usados, uso ordinário permitido.
+
+## Preparação corrigida e assets atualizados — 09/10/2026
+
+✅ Versão5: chegada de filtro/caneca no frame118 antes do pó; moinho elevado; suporte de cobre; distância de0,58unidade permite ver a extração. O fluxo aparece por espessura mantendo origem na saída. Câmera corrigida para comportar grão/moinho. Helper `cloudflare/art/blender/preparation_layout.py` gerado por Qwen local; coordenador integrou a fonte maior e revisou. Nenhum subagente remoto acionado.
+
+✅ Provas v5 aprovadas pelo coordenador e verificação geométrica funcional em150frames nos dois sentidos:170partículas, ordem de chegada, depósito dentro do filtro, conexão da extração e enquadramento. Fonte da verificação: `cloudflare/art/blender/verify_preparation.py`; resultado `cloudflare/reports/blender-preparation-check.json`. Render completo em `reports/blender-sequence-v5/`, mestre `reports/coffee-journey-final-v5.blend`. Nova prévia `reports/blender-preview-v5.mp4` (1.050.723bytes), gerada por utilitário Qwen revisado. Vídeos/provas anteriores são históricos.
+
+✅ Assets locais substituídos após conferência:300WebPs,9.038.448bytes; SHA256/tamanhos conferidos. Backup da pasta anterior em `cloudflare/reports/blender-assets-before-v5/`. Exportador usa WebP quality82/method3 após benchmark: método3 levou0,112s e22.432bytes no frame25; método0 seria47.776bytes. Exportar em staging fora de `public` e só trocar após completar/validar. `reports/blender-final-audit-v5.json`. Checks e42/42testes passaram.
+
+✅ Implementação enviada ao GitHub: branch `codex/blender-coffee-journey`, commit `d4b8fa6a8bde49b6c397050864499b5d0ddc0db5`. Sem merge ou deploy. A tentativa de criar PR em rascunho retornou403 `Resource not accessible by integration`; nenhum PR criado. Não repetir sem mudança de permissão da integração. O push Git funcionou; isso não confirma permissão do conector para PR.
+
+⏳ Pergunta enviada ao usuário para confirmar avanço/reversão no navegador local após Ctrl+F5. A ferramenta de navegador havia recusado acesso; não contornar. Confirmação ainda pendente. Resolver acesso para PR e validação de navegador antes de integrar/publicar. Fonte, quadros e vídeo corrigidos já estão prontos; não repetir render. Backend/D1 preservados. Última etapa é publicação somente Worker/assets após resolver estes bloqueios.
+
+## Revisão da prévia — 09/10/2026
+
+✅ Conferência final dos assets: 300 WebPs, 7.811.482 bytes; tamanho e SHA256 de cada arquivo coincidem com o manifest. `npm test` equivalente via Node: 42/42; `npm run check` equivalente: PASS. Evidência `cloudflare/reports/blender-final-audit.json`. Não confundir isso com validação de navegador.
+
+❌ Prévia EEVEE ainda não aprovada visualmente para produção. Comparação de 18 quadros sobre fundo #2a2621 em `cloudflare/reports/qwen-media-sheet.jpg`: no frame125 o pó sai do moinho antes do filtro chegar; durante extração o filtro quase encosta na caneca e esconde o café. Corrigir antes de publicar. Fonte identificada em `cloudflare/art/blender/coffee_journey.py`: moinho chega117, filtro somente136 (`arrive_leave` linha410), pó inicia antes; extração começa em z1.30 enquanto borda da caneca está aproximadamente1.27. Próximo passo: coordenar chegada do conjunto filtro/caneca antes dos grãos, manter pó no recipiente e criar distância de extração visível com suporte plausível, atualizando fluxo/partículas e provas locais. Rever trechos375–445 e475–490, sem alterar backend. Renderizar apenas provas relevantes antes de refazer300quadros.
+
+✅ Qwen foi usado de verdade para utilitários de revisão; relatórios em `local-qwen-executor/tasks/blender-*-result.json`. Limitação real: tarefa maior e auditoria retornaram código truncado/BLOCKED. Utilitário de contato foi gerado localmente e precisou de correção de uma linha pelo coordenador na integração (Image.alpha_composite funcional, pois método retornaNone). Agora executado e imagem conferida. Os rascunhos `reports/qwen-review-media.py` e `reports/qwen-integrity.py` são INCOMPLETOS: não executar. `SUCCESS` com validação apenas sintática não comprova funcionamento; exigir oracle funcional nas próximas tarefas. Não acionar Sol/Luna automaticamente.
+
+⏳ UI/scroll real ainda bloqueado pela recusa anterior da ferramenta de navegador; não contornar. Sem commit/PR/deploy nesta retomada. Prévia MP4 aberta no painel e disponível em `cloudflare/reports/blender-preview.mp4`. Limite consultado antes de nova etapa pesada:93% usado na janela curta; registrar e preservar margem antes de modelagem/render adicional. Automação de retomada segue ativa e lê este cache.
+
+## Pré-requisito Qwen local — 09/10/2026
+
+Preferência posterior à instalação: usuário pediu usar Qwen local "100% do tempo" para economizar. Aplicação: Qwen em toda execução delegável; coordenador mantém conversa, decisões, revisão e integração. Sem acionamento automático de Sol/Luna. Dividir escopos dentro dos limites reais; avisar quando um bloqueio exigir mudar de executor. Não prometer consumo remoto zero nem substituição automática do modelo principal.
+
+✅ Ollama 0.40.2 instalado a partir do ZIP oficial, SHA256 verificado, em `C:\Users\marco\AppData\Local\Programs\Ollama`. Modelo `qwen2.5-coder:14b-instruct-q4_K_M` baixado e verificado pelo Ollama. Vulkan identificou Radeon RX 6700 XT com 12 GiB; inferência real confirmou **100% GPU**, **49/49 camadas**, contexto 4096 e `size_vram=9459613039` bytes (igual ao tamanho carregado).
+
+✅ Executor delimitado em `C:\Users\marco\OneDrive\Desktop\NFC SENAC\local-qwen-executor\`, independente do site. `Invoke-Qwen.ps1` recebe o contrato criado pelo coordenador. Smoke real corrigiu uma função, executou oracle independente e devolveu diff/SUCCESS; revisão direta e repetição do oracle passaram. Outro teste real devolveu BLOCKED sem editar arquivos quando faltava decisão de negócio. Evidências: `evidence/installation-gpu.json`, `evidence/block-smoke.json`, `qwen-smoke-3uo55lhr/report.json` na pasta do executor. Consulte README/cache locais para limites e testes mecânicos.
+
+✅ Executor validado pelo coordenador: 12 testes executados, 11 aprovados e 1 ignorado por privilégio Windows para symlink real. Modelo descarregado após teste; `ollama ps` vazio confirmou liberação da VRAM. A automação de retomada foi atualizada para Blender e Qwen, preservando estado e horário existentes.
+
+⏳ Site/Blender: este pedido de instalação teve prioridade sobre a continuação visual; nenhuma publicação ou mudança no backend nesta etapa. Confirmados 300 arquivos `frame-*.webp`, manifest (42.945 bytes) e `reports/blender-preview.mp4` (1.415.314 bytes). O pipeline de exportação terminou; o texto abaixo de 08/10 sobre render em andamento é histórico. Retomar revisão temporal/visual da sequência e do player na branch `codex/blender-coffee-journey`; não repetir render sem necessidade comprovada. Liberar Qwen com `Release-Qwen.ps1` antes de trabalho GPU do Blender. Aprovação visual/UI, integração, PR e publicação da versão Blender continuam pendentes.
+
+## Blender em implementação — retomada 08/10/2026
+
+Atualização ao fim da sessão: player corrigido para liberar pin/restaurar seis fases quando o frame solicitado falha; todos os posters e textos agora usam o preparo direto na caneca. Executor confirmou42/42 testes antes dos assets. Arte foi corrigida pelo coordenador: NURBS elimina handles Bezier desatualizados; máscaras radiais dissipam vapor; água fina/transmissiva, materiais mais suaves. Provas Cycles HIP32 compostas sobre fundo aprovadas por revisão independente apenas para PRÉVIA (não produção): `reports/blender-proof-cycles/proof-composited.jpg`. PNGs alpha devem ser compostos antes da inspeção; visualizador isolado induziu falsa aparência de vapor opaco.
+
+Cycles/HIP falhou no lote; repetição travou após11quadros e foi cancelada. Pipeline EEVEE48 em andamento (sessão99001, log `reports/blender-preview-render.log`), gera300PNGs em `reports/blender-sequence-eevee/`, mestre `reports/coffee-journey-preview.blend`, WebPs/posters/manifest em `public/assets/journey/blender/`, MP4 `reports/blender-preview.mp4`, testes em `reports/blender-tests.log`. Não duplicar render sem checar arquivos/logs. Confirmar conclusão na próxima atualização. CUA recusou `getTab` do endereço local por política de URL (apesar de http); não contornar por outrobrowser/CDP. UI real, scroll temporal e publicação continuam pendentes. Branch sem commit/PR/deploy desta alteração. Limite compartilhado chegou90% usado na última checagem; preservar margem5% antes de mais trabalho substancial.
+
+Pedido ativo: reproduzir a experiência com autoria própria no Blender, explicitamente autorizado após a análise. Branch `codex/blender-coffee-journey`, mudanças ainda locais e não publicadas. Blender 4.5.9 LTS portátil oficial instalado em `cloudflare/reports/blender-tools/blender-4.5.9-windows-x64/blender.exe`, checksum SHA256 conferido contra download oficial. Hardware confirmado: Radeon RX 6700 XT, Ryzen 7 5800X (16 threads), 32 GB RAM.
+
+Fonte determinística: `cloudflare/art/blender/coffee_journey.py` e README; seis processos em 300 frames, EEVEE RGBA 960×840. Mestre editável `cloudflare/reports/coffee-journey-master.blend`. Seis provas em `cloudflare/reports/blender-proof/` foram renderizadas sem erro, mas reprovadas visualmente: sulco do grão com rasgos triangulares, água desconectada do bico, pó oculto no filtro e cerâmica rugosa demais. Corrigir estas causas antes de renderizar sequência completa. Não confundir prova renderizada com aprovação da qualidade.
+
+Player em `public/js/journey.js` + `journey-sequence.js`, CSS e HTML já alterados localmente: um canvas, pin GSAP, scrub .2, cache36/fetch4, sem autoplay, mobile/reduced estáticos. Bug de janela41/cache36 causando downloads infinitos foi corrigido para janela36 e coberto por teste de quiescência. Executor relatou `npm test` 37/37 na primeira versão; `npm run check` falha por poster ainda ausente. Retomada revisa fallback de mídia e posters/copy antes de QA real. Exportador `cloudflare/scripts/export-blender-frames.py` converte PNGs aprovados para300WebPs e6posters; ainda não executado. Contrato/evidências: `cloudflare/docs/BLENDER_JOURNEY.md`.
+
+Próximos passos: corrigir/renderizar provasv2, revisão visual independente, render300/exportação, validar scroll avanço/pausa/reversão/saltos, acessibilidade/mobile/tema, checks, PR e publicação só Worker/assets. Backend e dados preservados. Turno anterior interrompido ao detectar98% de uso; retomada começou com5% usado, sem comprar créditos ou resgatar resets.
+
+## Retorno visual do usuário — 07/10/2026
+
+Após a publicação da jornada de seis fases, o usuário considerou os vídeos rígidos e distantes do Reels e perguntou sobre IA gratuita ou animação própria com rolagem natural. A validação funcional anterior continua válida, mas não representa aprovação da fidelidade visual: a direção artística precisa ser revista. A montagem Mixkit muda câmera, ambiente e equipamento entre fases, interrompendo a continuidade desejada.
+
+Recomendação da análise, conferida por Sol em revisão independente: uma cena 3D coerente pré-renderizada, exportada como sequência de imagens e controlada pela rolagem, com avanço, pausa e reversão. Primeiro validar uma prévia isolada de 3–5 segundos (grão → partículas → equipamento) antes de produzir todos os processos. Preservar a identidade do café, iluminação, escala e trajetória de câmera; não prometer reprodução idêntica do Reels. Blender é uma opção gratuita para autoria por scripts. Sua instalação não foi localizada no PATH nem em Program Files/Blender Foundation; capacidade de GPU ainda não verificada (consulta CIM indisponível no sandbox).
+
+Consulta oficial nesta data: Runway oferece 125 créditos iniciais e vídeos gratuitos com marca d'água; Pika apresenta plano Free sem créditos mensais e sem licença comercial. Não há ferramenta de geração de vídeo por IA disponível nesta sessão. É possível criar a cena por código e integrar sua sequência, mas a renderização requer preparar e validar o ambiente. Nenhuma nova animação foi implementada ou publicada nesta análise; próximo passo proposto é a prévia visual contínua, sem alterações no backend, D1 ou checkout.
+
 ## Estado atual — 07/10/2026
 
 A jornada desktop de seis fases está publicada na Cloudflare na versão `eceb1047-a978-4f47-93cd-5c7370b22161`, com frontend no commit `f6a4ccf`. O PR #9 foi integrado à main pelo merge `ff431d1560b6085dc685c23f6b6400a0945815ea`: https://github.com/marcoszhp/camillo-colombi-/pull/9. Origem → torra → moagem → água no filtro → extração → servir. Os quatro vídeos Mixkit e posters estão integrados. A timeline usa uma fixação e dura 4,5 alturas da janela; a mídia fica pausada e seu `currentTime` acompanha a rolagem. Desktop a partir de 1024 px de largura, sem altura mínima. Celular usa fluxo estático e poster sem baixar vídeo; movimento reduzido inicia estático sem baixar mídia, com ativação explícita disponível no desktop.
