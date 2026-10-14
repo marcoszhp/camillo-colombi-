@@ -6,7 +6,7 @@ if (typeof location !== 'undefined' && new URLSearchParams(location.search).get(
 
 const root = document.querySelector('[data-coffee-journey]');
 if (root) {
-  root.dataset.motionBuild = '20261010-receiver';
+  root.dataset.motionBuild = '20261013-titles';
   const stage = root.querySelector('[data-journey-stage]');
   const canvas = root.querySelector('[data-journey-canvas]');
   const poster = root.querySelector('[data-journey-poster]');
@@ -106,8 +106,9 @@ if (root) {
         scenes.forEach((scene, index) => {
           if (!index) return;
           const at = ((index * 50 - .5) / 299) * 6;
-          timeline.to(scenes[index - 1], { autoAlpha: 0, y: -12, duration: .16 }, at - .08)
-            .to(scene, { autoAlpha: 1, y: 0, duration: .16 }, at - .08);
+          // A paused scroll position must never leave two titles overlapping.
+          timeline.to(scenes[index - 1], { autoAlpha: 0, y: -12, duration: .08 }, at - .08)
+            .to(scene, { autoAlpha: 1, y: 0, duration: .08 }, at);
         });
       }, root);
       reveal(0);
