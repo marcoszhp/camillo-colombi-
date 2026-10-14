@@ -1,5 +1,11 @@
 # Memória — Caffè Camillo Colombi
 
+## Atualização publicada — 14/10/2026
+
+✅ Correção mínima de transição publicada diretamente no Worker após `npm test` 43/43 e `npm run check`: build `20261013-titles`, versão Cloudflare `2057a61c-3915-445f-9578-7bdd65cef884`, URL `https://caffe-camillo-colombi.marcos-hpg114.workers.dev`. O título anterior desaparece antes de o próximo entrar, evitando sobreposição quando o scroll para. PR pelo conector GitHub continua bloqueado por403; branch `codex/journey-title-transitions` e commit `a34281c` estão preservados para PR manual.
+
+⚠️ Busca no código publicado não encontrou nenhuma implementação de “três opções de download” (não há links/rotas de download no frontend atual). Não inventar opções: pedir ao usuário quais são os três arquivos ou formatos esperados antes de criar a interface. Backend/D1/auth/carrinho/estoque/frete permanecem sem alteração.
+
 ## Revisão e publicação em andamento — 13/10/2026
 
 ✅ Revisão visual independente com Sol autorizada pelo usuário e concluída: `studio_review_final` PASS no escopo delimitado em `1e50e52`. Seis fases desktop claras; origem/moagem/extração/serviço escuros; rolagem e reversão; mobile390×844 seis fases escuras e extração/serviço claros,375/375 sem overflow. Sem bloqueadores materiais; não equivale a fotorealismo nem auditoria WCAG formal. Relatório versionado em `cloudflare/docs/STUDIO_VISUAL_REVIEW.md`. 300 quadros já exportados/integrados; não repetir render/exportação.
