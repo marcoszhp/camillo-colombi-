@@ -1,5 +1,15 @@
 # Memória — Caffè Camillo Colombi
 
+## Restauração solicitada pelo usuário — 17/10/2026
+
+✅ Restaurado o commit `138e983` (`Simplifica catalogo, corrige login e atualiza frete`), anterior à primeira jornada animada. Catálogo, autenticação, carrinho, estoque e frete foram preservados.
+
+✅ `npm test` 28/28 e `npm run check` aprovados. A página pública retornou HTTP200 e não contém `data-coffee-journey` nem `journey.js`; o layout anterior está ativo.
+
+✅ Publicado no mesmo endereço: `https://caffe-camillo-colombi.marcos-hpg114.workers.dev`, versão Cloudflare `4ae5d9f8-9bd6-41c2-83c5-cc558d8f2284`. Branch `codex/restore-pre-animation`, commit `eaa3409`.
+
+⏳ As três opções de download não existiam nessa base nem na versão animada; pedir os formatos/arquivos antes de implementar.
+
 ## Estado em 05/10/2026
 
 Versão publicada em main no GitHub, commit de implementação `ae999fe`; desenvolvida na branch `codex/camillo-experiencia-cloudflare` a partir de `da543a3`. O código Node/MySQL da raiz é a base histórica e permanece preservado. A aplicação Cloudflare fica em `cloudflare/` e foi copiada do checkout existente em Downloads; sem dados privados, `node_modules` ou estado D1. O diretório raiz de build/deploy Cloudflare é `cloudflare/`.
